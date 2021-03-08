@@ -1,0 +1,87 @@
+enum USER_ROLES {
+  ADMIN
+  USER
+}
+
+scalar DateTime
+scalar Minutes
+
+"""
+A single log entry with a amount of time and description
+"""
+type TimeEntry {
+  id: ID!
+  minutes: Minutes!
+  description: String
+}
+
+type TimeEntriesConnection {
+  cursor: String!
+  hasMore: Boolean!
+  logEntries: [TimeEntry]!
+}
+
+type User {
+  id: ID!
+  username: String!
+  # roles: [ USER_ROLES!]
+}
+
+union UserResult = User | AuthError
+
+interface Error {
+  message: String
+}
+
+type AuthPayload {
+  user: User
+}
+
+type LogoutPayload {
+  ok: Boolean
+}
+
+type SignupError implements Error {
+  message: String
+}
+
+type LoginError implements Error {
+  message: String
+}
+
+type LogoutError implements Error {
+  message: String
+}
+
+type ReportTimeError implements Error {
+  message: String
+}
+
+type AuthError implements Error {
+  message: String
+}
+
+union ReportTimeResult = TimeEntry | ReportTimeError | AuthError
+union SignupResult = AuthPayload | SignupError
+union LoginResult = AuthPayload | LoginError | AuthError
+union LogoutResult = LogoutPayload | LogoutError | AuthError
+
+type Query {
+  healthCheck: String
+  me: UserResult
+  allTimeEntries: TimeEntriesConnection
+}
+
+type Mutation {
+  """
+  Create log entry and return the newly created entry or error if unsuccessful
+  """
+  reportTime(minutes: Minutes!, description: String): ReportTimeResult
+
+  signup(username: String!, password: String!): SignupResult
+
+  login(username: String!, password: String!): LoginResult
+
+  logout: LogoutResult
+
+}

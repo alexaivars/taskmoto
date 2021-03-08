@@ -1,0 +1,6 @@
+.env
+build
+certs
+node_modules
+**/*/generated
+yarn-error.log
