@@ -1,5 +1,6 @@
 {
   "private": true,
+  "name": "@taskmoto/workspace",
   "scripts": {
     "dev": "node scripts/start-dev.js"
   },
