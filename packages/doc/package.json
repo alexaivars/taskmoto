@@ -1,0 +1,10 @@
+{
+  "name": "@taskmoto/doc",
+  "version": "1.0.0",
+  "license": "MIT",
+  "dependencies": {
+    "@taskmoto/ui": "1.0.0"
+  },
+  "devDependencies": {},
+  "scripts": {}
+}

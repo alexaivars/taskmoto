@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import { media } from 'ui/media';
+import { media } from './media';
 
 const ButtonField = styled.div`
   & > * {

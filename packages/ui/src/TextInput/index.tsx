@@ -3,24 +3,24 @@ import styled, { css, StyledComponent } from "styled-components";
 import TextElement, { TextProps } from "./TextElement";
 import SearchElement, { SearchProps } from "./SearchElement";
 import TextAreaElement, { TextAreaProps } from "./TextAreaElement";
-import {color, focus, background } from "ui/styles";
+import {focus, background } from "../styles";
 
 type ElementProps = TextProps | SearchProps | TextAreaProps;
 
 const TextInputRefRenderFunction: React.ForwardRefRenderFunction<
-  HTMLInputElement | HTMLTextAreaElement,
+  HTMLInputElement & HTMLTextAreaElement,
   ElementProps
 > = (
-  props: ElementProps,
-  ref: React.RefObject<HTMLInputElement & HTMLTextAreaElement>
+  props,
+  ref,
 ) => {
   switch (props.type) {
     case "textarea":
-      return <TextAreaElement {...props} ref={ref} />;
+      return <TextAreaElement {...props} ref={ref}/>;
     case "search":
-      return <SearchElement {...props} ref={ref} />;
+      return <SearchElement {...props} ref={ref}/>;
     default:
-      return <TextElement {...props} ref={ref} />;
+      return <TextElement {...props} ref={ref}/>;
   }
 };
 

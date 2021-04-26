@@ -2,24 +2,35 @@ const path = require("path");
 const concurrently = require("concurrently");
 concurrently(
   [
-    "npm:watch-*",
+    // {
+    //   command: "yarn:dev",
+    //   name: "ui",
+    //   prefixColor: "pink",
+    //   cwd: path.resolve(__dirname, "../packages/ui"),
+    // },
     {
       command: "yarn:dev:types",
       name: "api:types",
       prefixColor: "green",
-      cwd: path.resolve(__dirname, "../services/api"),
+      cwd: path.resolve(__dirname, "../packages/api"),
     },
     {
       command: "yarn:dev:server",
       name: "api:server",
       prefixColor: "yellow",
-      cwd: path.resolve(__dirname, "../services/api"),
+      cwd: path.resolve(__dirname, "../packages/api"),
     },
+    // {
+    //   command: "yarn:dev:generate",
+    //   name: "web:server",
+    //   prefixColor: "blue",
+    //   cwd: path.resolve(__dirname, "../packages/web"),
+    // },
     {
       command: "yarn:dev:server",
       name: "web:server",
       prefixColor: "blue",
-      cwd: path.resolve(__dirname, "../services/web"),
+      cwd: path.resolve(__dirname, "../packages/web"),
     },
   ],
   {

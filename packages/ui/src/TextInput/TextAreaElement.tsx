@@ -1,10 +1,13 @@
 import React, { TextareaHTMLAttributes } from "react";
 
-export type TextAreaProps = Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, "type"> & {
+export type TextAreaProps = Omit<
+  TextareaHTMLAttributes<HTMLTextAreaElement>,
+  "type"
+> & {
   type: "textarea";
   value?: string;
   resize?: "true" | true | "false" | false;
-}
+};
 
 const TEXTAREA_BORDER_HEIGHT = 2;
 const TEXTAREA_ROWS_DEFAULT = 3;
@@ -15,7 +18,7 @@ const DynamicTextAreaElementRefRenderFunction: React.ForwardRefRenderFunction<
 > = (
   { value, style, onChange, rows = TEXTAREA_ROWS_DEFAULT, ...props },
   forwardedRef
-) => {
+): React.ReactElement<"textarea"> => {
   const ref = React.useRef<HTMLTextAreaElement>(
     document.createElement("textarea")
   );
@@ -88,7 +91,10 @@ const DynamicTextAreaElementRefRenderFunction: React.ForwardRefRenderFunction<
 const StaticTextAreaElementRefRenderFunction: React.ForwardRefRenderFunction<
   HTMLTextAreaElement,
   TextAreaProps
-> = ({ rows = TEXTAREA_ROWS_DEFAULT, ...props }, ref) => (
+> = (
+  { rows = TEXTAREA_ROWS_DEFAULT, ...props },
+  ref
+): React.ReactElement<"textarea"> => (
   <textarea {...props} ref={ref} rows={rows || TEXTAREA_ROWS_DEFAULT} />
 );
 

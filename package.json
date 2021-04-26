@@ -5,7 +5,7 @@
     "dev": "node scripts/start-dev.js"
   },
   "workspaces": [
-    "services/*"
+    "packages/*"
   ],
   "devDependencies": {
     "concurrently": "^6.0.2"

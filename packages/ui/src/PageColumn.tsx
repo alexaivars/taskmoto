@@ -1,6 +1,6 @@
 import React from 'react';
 import styled, { css } from 'styled-components';
-import { media } from 'ui/media';
+import { media } from './media';
 
 const Layout = styled.div`
   ${media.greaterThan('tablet')} {

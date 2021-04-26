@@ -30,7 +30,7 @@ export type TextType = ForwardRefExoticComponent<
 export const TextElementRefRenderFunction: React.ForwardRefRenderFunction<
   HTMLInputElement,
   TextProps
-> = ({ type = "text", ...props }, ref):React.ReactElement<"input"> => (
+> = ({ type = "text", ...props }, ref): React.ReactElement<"input"> => (
   <input type={type} {...props} ref={ref} />
 );
 

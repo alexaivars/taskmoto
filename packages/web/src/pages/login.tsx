@@ -1,10 +1,8 @@
 import Router from "next/router";
 import { gql } from "@apollo/client";
 import { useLoginMutation, useSignupMutation } from "generated/graphql";
-import TextInput from "ui/TextInput";
-import Button from "ui/Button";
-import ButtonField from "ui/ButtonField";
-import FormField from "ui/FormField";
+import { TextInput, Button, ButtonField, FormField } from "@taskmoto/ui";
+
 gql`
   mutation login($username: String!, $password: String!) {
     login(username: $username, password: $password) {

@@ -33,7 +33,15 @@ const ClearIcon = styled.div`
   }
 `;
 
-const ClearContainer = ({ disabled, children, value }) => {
+const ClearContainer = ({
+  disabled,
+  children,
+  value,
+}: {
+  disabled?: boolean;
+  children: React.ReactNode;
+  value?: string | number | readonly string[];
+}) => {
   const ref = React.useRef<HTMLDivElement>(null);
   const [show, setShow] = React.useState<boolean>(false);
   React.useEffect((): void => {
@@ -89,7 +97,7 @@ const ClearContainer = ({ disabled, children, value }) => {
 export const SearchElementRefRenderFunction: React.ForwardRefRenderFunction<
   HTMLInputElement,
   SearchProps
-> = ({ type, ...props }, ref) => (
+> = ({ type, ...props }, ref): React.ReactElement => (
   <ClearContainer
     disabled={props.disabled || props.readOnly}
     value={props.defaultValue || props.value}

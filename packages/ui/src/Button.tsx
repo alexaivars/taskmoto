@@ -3,7 +3,7 @@ import React, {
   ForwardRefExoticComponent,
   RefAttributes,
 } from "react";
-import styled from "styled-components";
+import styled from "styled-components/macro";
 import { focus, color } from "./styles";
 
 export type ButtonElementProps = ButtonHTMLAttributes<HTMLButtonElement>;

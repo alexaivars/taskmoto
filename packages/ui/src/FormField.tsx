@@ -1,11 +1,14 @@
 import React from "react";
 import styled, { DefaultTheme } from "styled-components";
-import Label from "ui/Label";
+import Label from "./Label";
 
-const fromEntriesReducer = (
-  acc: { [key: string]: any },
-  [key, value]: [string, any]
-) => ({ ...acc, [key]: value });
+const objectFromEntries = (
+  entries: (string | boolean | undefined)[][]
+): { [key: string]: string | boolean } => {
+  return entries.reduce((acc, [key, value]) => {
+    return key === "string" && value ? { ...acc, [key]: value } : acc;
+  }, {});
+};
 
 type FormFieldProps = {
   description?: string;
@@ -31,24 +34,23 @@ const FormField: React.FunctionComponent<FormFieldProps> = ({
     <div className={className}>
       <Label htmlFor={id}>{label}</Label>
       {description && <p>{description}</p>}
-      {React.cloneElement(
-        children,
-        [
-          ["id", id],
-          ["data-required", required],
-          [
-            "aria-describedby",
-            error
-              ? `${id}-error`
-              : description
-              ? `${id}-description`
-              : undefined,
-          ],
-          ["variant", error ? "failure" : undefined],
-        ]
-          .filter(Boolean)
-          .reduce(fromEntriesReducer, {})
-      )}
+      {children &&
+        React.cloneElement(
+          children,
+          objectFromEntries([
+            ["id", id],
+            ["data-required", required],
+            [
+              "aria-describedby",
+              error
+                ? `${id}-error`
+                : description
+                ? `${id}-description`
+                : undefined,
+            ],
+            ["variant", error ? "failure" : undefined],
+          ])
+        )}
       {error && <p id={`${id}-error`}>{error}</p>}
     </div>
   );

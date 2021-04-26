@@ -82,12 +82,12 @@ openssl rsa \
   -pubout \
   -out $OUT/jwtAccessTokenPublic.pem 
 CHECK='\033[0;32m\xE2\x9C\x94\033[0m'
-for service in services/*; do
-echo service
-    if [ -d "$service" ]; then
+for package in packages/*; do
+echo package
+    if [ -d "$package" ]; then
         # Will not run if no directories are available
-        echo -e "Running setup for $service:"
-        ENV_FILE=$DIR/../$service/.env
+        echo -e "Running setup for $package:"
+        ENV_FILE=$DIR/../$package/.env
         if [[ -f "$FILE" ]]; then
           # sed -r  -i '' '/SSL_PRIVATE_KEY/,/END PRIVATE KEY/d' $ENV_FILE
           # sed -r  -i '' '/SSL_CERTIFICATE/,/END CERTIFICATE/d' $ENV_FILE
