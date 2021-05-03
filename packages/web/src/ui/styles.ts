@@ -3,10 +3,11 @@ import { css, FlattenSimpleInterpolation } from "styled-components";
 import { lighten, readableColor, tint } from "polished";
 
 
-export const color = (color: string): FlattenSimpleInterpolation => {
+export const color = (color: any): FlattenSimpleInterpolation => {
+  console.log('>>', color);
   return css`
     & {
-      color: ${readableColor(color)};
+      color: ${readableColor( "red" /* color */ )};
     }
   `;
 };

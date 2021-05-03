@@ -21,7 +21,7 @@ type FormFieldProps = {
   children?: React.ReactElement;
 };
 
-const FormField: React.FunctionComponent<FormFieldProps> = ({
+const FormFieldComponent: React.FunctionComponent<FormFieldProps> = ({
   description,
   error,
   id,
@@ -56,9 +56,10 @@ const FormField: React.FunctionComponent<FormFieldProps> = ({
   );
 };
 
-const StyledFormField = styled(FormField)`
+export const FormField = styled(FormFieldComponent)`
   & > * + * {
     margin-top: 0.25rem;
   }
 `;
-export default StyledFormField;
+
+export default FormField;

@@ -1,7 +1,11 @@
 import Router from "next/router";
 import { gql } from "@apollo/client";
 import { useLoginMutation, useSignupMutation } from "generated/graphql";
-import { TextInput, Button, ButtonField, FormField } from "@taskmoto/ui";
+import { Button } from "ui/Button";
+import { TextInput } from "ui/TextInput";
+import { ButtonField } from "ui/ButtonField";
+import { FormField } from "ui/FormField";
+
 
 gql`
   mutation login($username: String!, $password: String!) {
@@ -67,10 +71,10 @@ const Login = () => {
         <TextInput type="password" name="password" />
       </FormField>
       <ButtonField>
-        <Button type="submit" name="login">
+        <Button type="submit" name="login" >
           login
         </Button>
-        <Button type="submit" name="signup">
+        <Button type="submit" name="signup" variant="primary">
           signup
         </Button>
       </ButtonField>

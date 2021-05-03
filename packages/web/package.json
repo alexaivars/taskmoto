@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build": "next build",
-    "dev:generate": "yarn generate",
+    "dev:generate": "yarn generate && scripts/generateIndex.sh",
     "dev:server": "NODE_EXTRA_CA_CERTS=$(grep NODE_EXTRA_CA_CERTS .env | cut -d '=' -f2) ts-node --project tsconfig.server.json server",
     "dev": "yarn:generate && yarn dev:server",
     "generate": "NODE_EXTRA_CA_CERTS=$(grep NODE_EXTRA_CA_CERTS .env | cut -d '=' -f2) graphql-codegen --require dotenv/config --config codegen.yml",
@@ -12,7 +12,6 @@
   },
   "dependencies": {
     "@apollo/client": "^3.3.15",
-    "@taskmoto/ui": "1.0.0",
     "dotenv": "^8.2.0",
     "graphql": "^15.5.0",
     "http-proxy": "^1.18.1",

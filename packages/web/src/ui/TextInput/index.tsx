@@ -26,9 +26,9 @@ const TextInputRefRenderFunction: React.ForwardRefRenderFunction<
 
 const TextInputComponent = React.forwardRef(TextInputRefRenderFunction);
 
-type TextInputProps = ElementProps & { variant?: "success" | "failure" };
+export type TextInputProps = ElementProps & { variant?: "success" | "failure" };
 
-const TextInput = styled(TextInputComponent)<TextInputProps>`
+export const TextInput = styled(TextInputComponent)<TextInputProps>`
   ${({theme}) => background(theme.primary)}
   width: 100%;
   border: 1px solid ${(props) => props.theme.primaryDark};

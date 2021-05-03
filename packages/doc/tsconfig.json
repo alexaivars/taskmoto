@@ -4,8 +4,14 @@
     "target": "es6",
     "module": "commonjs",
     "moduleResolution": "node",
+    "esModuleInterop": true,
     "rootDir": "src",
     "outDir": "dist",
-    "declaration": true
+    "jsx": "react-jsx",
+    "declaration": true,
+    "noImplicitAny": true,
+    "paths": {
+      "@taskmoto/ui": ["../ui/src/*"]
+    }
   }
 }

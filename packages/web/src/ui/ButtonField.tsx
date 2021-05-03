@@ -1,7 +1,7 @@
 import styled from 'styled-components';
 import { media } from './media';
 
-const ButtonField = styled.div`
+export const ButtonField = styled.div`
   & > * {
     width: 100%;
     display: block;
@@ -37,4 +37,3 @@ const ButtonField = styled.div`
 `;
 
 export default ButtonField;
-

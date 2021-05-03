@@ -69,7 +69,7 @@ const typography = css`
     color: ${(props) => props.theme.text};
   }
 `
-const GlobalStyle = createGlobalStyle`
+export const GlobalStyle = createGlobalStyle`
   ${normalize}
   ${reset}
   ${typography}
