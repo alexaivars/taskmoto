@@ -12,15 +12,18 @@ export const breakpoints = {
 
 type BreakpointKey = keyof typeof breakpoints;
 
-export function lessThan(key: BreakpointKey) {
+export function lessThan(key: BreakpointKey): string {
   return `@media (max-width: ${breakpoints[key] - 1}px)`;
 }
 
-export function greaterThan(key: BreakpointKey) {
+export function greaterThan(key: BreakpointKey): string {
   return `@media (min-width: ${breakpoints[key]}px)`;
 }
 
-export function between(firstKey: BreakpointKey, secondKey: BreakpointKey) {
+export function between(
+  firstKey: BreakpointKey,
+  secondKey: BreakpointKey
+): string {
   return `@media (min-width: ${breakpoints[firstKey]}px) and (max-width: ${
     breakpoints[secondKey] - 1
   }px)`;
@@ -33,4 +36,3 @@ export const media = {
 };
 
 export default media;
-

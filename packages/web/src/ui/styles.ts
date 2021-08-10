@@ -1,28 +1,37 @@
-import { css, FlattenSimpleInterpolation } from "styled-components";
+import {
+  css,
+  DefaultTheme,
+  FlattenSimpleInterpolation,
+} from 'styled-components';
+import { lighten, readableColor, tint } from 'polished';
 
-import { lighten, readableColor, tint } from "polished";
+type ThemeValue = ((theme: DefaultTheme) => string) | string;
 
-
-export const color = (color: any): FlattenSimpleInterpolation => {
-  console.log('>>', color);
+export function color(color: string): FlattenSimpleInterpolation {
   return css`
     & {
-      color: ${readableColor( "red" /* color */ )};
+      color: ${readableColor(color)};
     }
   `;
-};
+}
 
-export const background = (color: string): FlattenSimpleInterpolation => {
-  const bg = tint(0.95, color);
+export function background(
+  color: string,
+  tintBackground?: boolean
+): FlattenSimpleInterpolation {
+  const bg = tintBackground ? tint(0.95, color) : color;
   return css`
     & {
       color: ${readableColor(bg)};
-      background: ${bg}
+      background: ${bg};
+    }
+    & > div > svg {
+      fill: ${readableColor(bg)};
     }
   `;
-};
+}
 
-export const focus = (color: string): FlattenSimpleInterpolation => {
+export function focus(color: string): FlattenSimpleInterpolation {
   return css`
     &:focus {
       position: relative;
@@ -32,5 +41,29 @@ export const focus = (color: string): FlattenSimpleInterpolation => {
         0 0 0 3px ${lighten(0.2, color)};
     }
   `;
-};
+}
 
+export function variant<T extends string>(
+  map: Record<T, ThemeValue>,
+  defaultKey: T
+) {
+  return function variantResolver({
+    theme,
+    variant,
+  }: {
+    theme: DefaultTheme;
+    variant?: T;
+  }): string {
+    const value: ThemeValue =
+      map[
+        variant === 'undefined' || variant === null || variant === undefined
+          ? defaultKey
+          : variant
+      ];
+    if (typeof value === 'function') {
+      return value(theme);
+    } else {
+      return value;
+    }
+  };
+}

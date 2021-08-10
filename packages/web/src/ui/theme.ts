@@ -1,6 +1,6 @@
-import { DefaultTheme } from "styled-components";
+import { DefaultTheme } from 'styled-components';
 
-declare module "styled-components" {
+declare module 'styled-components' {
   export interface DefaultTheme {
     error: string;
     errorDark: string;
@@ -22,23 +22,23 @@ declare module "styled-components" {
   }
 }
 
-export const lightTheme: DefaultTheme = {
-  error: "#ea0658",
-  errorDark: "#880638",
-  errorLight: "#fd9cb9",
-  primary: "#4969ee", // "#c5cae9",
-  primaryDark: "#97a0d8",
-  primaryLight: "#f0f1f9",
-  secondary: "#a5d6a7",
-  secondaryDark: "#d7ffd9",
-  secondaryLight: "#75a478",
-  success: "#14c860",
-  successDark: "#135a2f",
-  successLight: "#a3ebc1",
-  text: "#2c3647",
+export const light: DefaultTheme = {
+  error: '#ea0658',
+  errorDark: '#880638',
+  errorLight: '#fd9cb9',
+  primary: '#4969ee', // "#c5cae9",
+  primaryDark: '#97a0d8',
+  primaryLight: '#f0f1f9',
+  secondary: '#a5d6a7',
+  secondaryDark: '#d7ffd9',
+  secondaryLight: '#75a478',
+  success: '#14c860',
+  successDark: '#135a2f',
+  successLight: '#a3ebc1',
+  text: '#2c3647',
   textFontFamily:
     'Publik,Helvetica,Arial,"Nimbus Sans L","Bitstream Vera Sans",sans-serif',
-  warning: "#fcb462",
-  warningDark: "#704510",
-  warningLight: "#fff1e0",
+  warning: '#fcb462',
+  warningDark: '#704510',
+  warningLight: '#fff1e0',
 };

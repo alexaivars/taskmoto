@@ -1,13 +1,16 @@
-import { createAuthMiddleware } from "./authMiddleware";
-import jwt from "jsonwebtoken";
-import timekeeper from "timekeeper";
+import { createAuthMiddleware, AuthMiddleware } from './authMiddleware';
+import jwt from 'jsonwebtoken';
+import timekeeper from 'timekeeper';
+import { Request, Response } from 'express';
+import UserAPI from './datasources/UserAPI';
 
 const TIMESTAMP = 1616959677323;
-const ACCESS_TOKEN_SECRET = "asdfghj";
-const REFRESH_TOKEN_SECRET = "qwwerty";
+const ACCESS_TOKEN_SECRET = 'asdfghj';
+const ACCESS_TOKEN_PUBLIC = 'fubar';
+const REFRESH_TOKEN_SECRET = 'qwwerty';
 const VALID_REFRESH_TOKEN = jwt.sign(
   {
-    sub: "<user id>",
+    sub: '<user id>',
     iat: TIMESTAMP,
   },
   REFRESH_TOKEN_SECRET,
@@ -15,14 +18,14 @@ const VALID_REFRESH_TOKEN = jwt.sign(
 );
 const VALID_ACCESS_TOKEN = jwt.sign(
   {
-    sub: "<user id>",
+    sub: '<user id>',
     iat: TIMESTAMP,
   },
   ACCESS_TOKEN_SECRET,
   { expiresIn: 3600 }
 );
 
-let middleware: any, mockApi: any, req: any, res: any;
+let middleware: AuthMiddleware, mockApi: UserAPI, req: Request, res: Response;
 
 beforeEach(() => {
   mockApi = {
@@ -31,7 +34,7 @@ beforeEach(() => {
     createRefreshToken: jest.fn(() => VALID_REFRESH_TOKEN),
     createAccessToken: jest.fn(() => VALID_ACCESS_TOKEN),
     removeRefreshToken: jest.fn(),
-  };
+  } as unknown as UserAPI;
   timekeeper.freeze(TIMESTAMP);
   req = {
     header: jest.fn(
@@ -40,32 +43,37 @@ beforeEach(() => {
           Cookie: `access-token=${VALID_ACCESS_TOKEN}; refresh-token=${VALID_REFRESH_TOKEN}`,
         }[key])
     ),
-  };
+  } as unknown as Request;
   res = {
     cookie: jest.fn(),
     locals: {},
-  };
-  middleware = createAuthMiddleware(mockApi, ACCESS_TOKEN_SECRET);
+  } as unknown as Response;
+
+  middleware = createAuthMiddleware(
+    mockApi,
+    ACCESS_TOKEN_SECRET,
+    ACCESS_TOKEN_PUBLIC
+  );
 });
 
-it("should not attach user id when there are no cookies", async () => {
+it('should not attach user id when there are no cookies', async () => {
   const next = jest.fn();
-  await middleware({ header: jest.fn() }, res, next);
+  await middleware({ header: jest.fn() } as unknown as Request, res, next);
   expect(next).toBeCalledTimes(1);
   expect(res.locals.userId).toBeUndefined();
 });
 
-it("should attach user id when there is a valid access token", async () => {
+it('should attach user id when there is a valid access token', async () => {
   const next = jest.fn();
   req.cookies = {
-    "access-token": VALID_ACCESS_TOKEN,
+    'access-token': VALID_ACCESS_TOKEN,
   };
   await middleware(req, res, next);
   expect(next).toBeCalledTimes(1);
-  expect(res.locals.userId).toEqual("<user id>");
+  expect(res.locals.userId).toEqual('<user id>');
 });
 
-it("should attach user id and update cookies when there is only a valid refresh token", async () => {
+it('should attach user id and update cookies when there is only a valid refresh token', async () => {
   const next = jest.fn();
   req = {
     header: jest.fn(
@@ -74,12 +82,12 @@ it("should attach user id and update cookies when there is only a valid refresh 
           Cookie: `refresh-token=${VALID_REFRESH_TOKEN}`,
         }[key])
     ),
-  };
+  } as unknown as Request;
   timekeeper.travel(TIMESTAMP + 3601);
   await middleware(req, res, next);
   expect(next).toBeCalledTimes(1);
-  expect(res.locals.userId).toEqual("<user id>");
-  expect(res.cookie.mock.calls).toMatchInlineSnapshot(`
+  expect(res.locals.userId).toEqual('<user id>');
+  expect((res.cookie as jest.Mock).mock.calls).toMatchInlineSnapshot(`
     Array [
       Array [
         "refresh-token",

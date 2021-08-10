@@ -1,12 +1,17 @@
-import React, { InputHTMLAttributes } from "react";
-import styled, { css, StyledComponent } from "styled-components";
+import React, { InputHTMLAttributes } from 'react';
+import styled, { css, DefaultTheme, StyledComponent } from 'styled-components';
 
 export type SearchProps = Omit<
   InputHTMLAttributes<HTMLInputElement>,
-  "type"
-> & { type: "search" };
+  'type'
+> & { type: 'search' };
 
-const ClearWrapper: StyledComponent<"div", any, {}, never> = styled.div`
+const ClearWrapper: StyledComponent<
+  'div',
+  DefaultTheme,
+  Record<string, unknown>,
+  never
+> = styled.div`
   position: relative;
   display: inline-block;
   width: 100%;
@@ -50,30 +55,32 @@ const ClearContainer = ({
 
   React.useEffect(() => {
     const input: HTMLInputElement | null =
-      ref?.current?.querySelector("input") || null;
+      ref?.current?.querySelector('input') || null;
     if (input) {
       const handleChange = (event: Event) => {
         setShow(!!(event.target as HTMLInputElement).value);
       };
-      input.addEventListener("change", handleChange, false);
-      input.addEventListener("input", handleChange, false);
+      input.addEventListener('change', handleChange, false);
+      input.addEventListener('input', handleChange, false);
       return () => {
-        input.removeEventListener("change", handleChange, false);
-        input.removeEventListener("input", handleChange, false);
+        input.removeEventListener('change', handleChange, false);
+        input.removeEventListener('input', handleChange, false);
       };
     }
   }, [ref, setShow]);
 
   const handleClear = React.useCallback(() => {
     const input: HTMLInputElement | null =
-      ref?.current?.querySelector("input") || null;
+      ref?.current?.querySelector('input') || null;
     if (input) {
-      const inputEvent: Event = new Event("input", { bubbles: true });
-      const nativeInputValueSetter: any = (Object.getOwnPropertyDescriptor(
-        window.HTMLInputElement.prototype,
-        "value"
-      ) as PropertyDescriptor).set;
-      nativeInputValueSetter.call(input, "");
+      const inputEvent: Event = new Event('input', { bubbles: true });
+      const nativeInputValueSetter: ((v: unknown) => void) | undefined = (
+        Object.getOwnPropertyDescriptor(
+          window.HTMLInputElement.prototype,
+          'value'
+        ) as PropertyDescriptor
+      ).set;
+      nativeInputValueSetter?.call(input, '');
       input.dispatchEvent(inputEvent);
     }
   }, [ref]);
@@ -97,7 +104,7 @@ const ClearContainer = ({
 export const SearchElementRefRenderFunction: React.ForwardRefRenderFunction<
   HTMLInputElement,
   SearchProps
-> = ({ type, ...props }, ref): React.ReactElement => (
+> = ({ type: _, ...props }: SearchProps, ref): React.ReactElement => (
   <ClearContainer
     disabled={props.disabled || props.readOnly}
     value={props.defaultValue || props.value}

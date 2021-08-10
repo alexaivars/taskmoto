@@ -5,6 +5,13 @@
     "sourceMap": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
-    "noImplicitAny": false
+    "esModuleInterop": true,
+    "noImplicitAny": false,
+    "jsx": "react-jsx",
+    "plugins": [
+      {
+        "name": "typescript-styled-plugin"
+      }
+    ]
   }
 }

@@ -1,16 +1,16 @@
-import SecurePassword from "secure-password";
-import createError from "http-errors";
-import jwt from "jsonwebtoken";
-import { Context } from "..";
-import { DataSource } from "apollo-datasource";
-import { Redis } from "ioredis";
-import { User } from "../generated/types";
-import { v1 as uuid } from "uuid";
+import SecurePassword from 'secure-password';
+import createError from 'http-errors';
+import jwt from 'jsonwebtoken';
+import { IDataSources } from '..';
+import { DataSource, DataSourceConfig } from 'apollo-datasource';
+import { Redis } from 'ioredis';
+import { User } from '../generated/types';
+import { v1 as uuid } from 'uuid';
 
 const userFromHash = (hash: { [key: string]: string }): User => {
   const { id, username }: { id?: string; username?: string } = hash;
   return {
-    __typename: "User",
+    __typename: 'User',
     id,
     username,
   };
@@ -18,7 +18,7 @@ const userFromHash = (hash: { [key: string]: string }): User => {
 
 class UserAPI extends DataSource {
   store: Redis;
-  context?: Context;
+  context?: IDataSources;
   pwd: SecurePassword;
 
   constructor({ store }: { store: Redis }) {
@@ -28,60 +28,61 @@ class UserAPI extends DataSource {
     this.pwd = new SecurePassword();
   }
 
-  initialize(config: any) {
+  initialize(config: DataSourceConfig<IDataSources>): void {
     this.context = config.context;
   }
 
   async getUserHash(id: string): Promise<string> {
     const hash = await this.store.get(`USER:${id}:HASH`);
     if (!hash) {
-      throw new createError.Unauthorized("User missing password");
+      throw new createError.Unauthorized('User missing password');
     }
     return hash;
   }
 
   async getUserById(id: string): Promise<User> {
-    const user: User = userFromHash(await this.store.hgetall(`USER:${id}:DATA`))
+    const user: User = userFromHash(
+      await this.store.hgetall(`USER:${id}:DATA`)
+    );
     if (!user) {
-      throw new createError.Unauthorized("User not found");
+      throw new createError.Unauthorized('User not found');
     }
     return user;
   }
 
   async getUserByName(username: string): Promise<User> {
-    const key: string = Buffer.from(username, "utf8").toString("base64");
+    const key: string = Buffer.from(username, 'utf8').toString('base64');
     const id: string | null = await this.store.get(`NAME:ID:${key}`);
     if (!id) {
-      throw new createError.Unauthorized("User not found");
+      throw new createError.Unauthorized('User not found');
     }
-    const user: User = userFromHash(await this.store.hgetall(`USER:${id}:DATA`));
+    const user: User = userFromHash(
+      await this.store.hgetall(`USER:${id}:DATA`)
+    );
     return user;
   }
 
   async createUserId(username: string): Promise<string> {
-    const key: string = Buffer.from(username, "utf8").toString("base64");
-    if (Boolean(await this.store.exists(`NAME:ID:${key}`))) {
-      throw new Error("Username must be unique");
-    }
-
+    const key: string = Buffer.from(username, 'utf8').toString('base64');
+    let exists: number;
     let id: string;
-    while (true) {
-      id = uuid();
-      const exists: number = await this.store.exists(`USER:${id}:NAME`);
-      if (exists === 0) {
-        await this.store.set(`NAME:ID:${key}`, id);
-        await this.store.set(`USER:${id}:NAME`, username);
-        break;
-      }
+    if (await this.store.exists(`NAME:ID:${key}`)) {
+      throw new Error('Username must be unique');
     }
+    do {
+      id = uuid();
+      exists = await this.store.exists(`USER:${id}:NAME`);
+    } while (exists);
+    await this.store.set(`NAME:ID:${key}`, id);
+    await this.store.set(`USER:${id}:NAME`, username);
     return id;
   }
 
   async createUser(username: string, password: string): Promise<User> {
     const hash: Buffer = await this.pwd.hash(Buffer.from(password));
     const id: string = await this.createUserId(username);
-    await this.store.set(`USER:${id}:HASH`, hash.toString("base64"));
-    await this.store.hset(`USER:${id}:DATA`, "id", id, "username", username);
+    await this.store.set(`USER:${id}:HASH`, hash.toString('base64'));
+    await this.store.hset(`USER:${id}:DATA`, 'id', id, 'username', username);
     return this.getUserById(id);
   }
 
@@ -91,7 +92,7 @@ class UserAPI extends DataSource {
     const hash: string = await this.getUserHash(user.id);
     const result: symbol = await this.pwd.verify(
       userPassword,
-      Buffer.from(hash, "base64")
+      Buffer.from(hash, 'base64')
     );
 
     switch (result) {
@@ -100,7 +101,7 @@ class UserAPI extends DataSource {
           const improvedHash = await this.pwd.hash(userPassword);
           await this.store.set(
             `USER:${user.id}:HASH`,
-            improvedHash.toString("base64")
+            improvedHash.toString('base64')
           );
           // Save improvedHash somewhere
         } catch (err) {
@@ -109,7 +110,7 @@ class UserAPI extends DataSource {
       case SecurePassword.VALID:
         return user;
       default:
-        throw new createError.Unauthorized("Invalid password");
+        throw new createError.Unauthorized('Invalid password');
     }
   }
 
@@ -125,14 +126,14 @@ class UserAPI extends DataSource {
       const clockTimestamp: number = await this.getTimestamp();
 
       if (Boolean(exists) === false) {
-        throw new createError.Unauthorized("Invalid token");
+        throw new createError.Unauthorized('Invalid token');
       }
 
       try {
         jwt.verify(token, hash, { clockTimestamp });
       } catch (err) {
         // console.log(err.name);
-        throw new createError.Unauthorized("Invalid token");
+        throw new createError.Unauthorized('Invalid token');
       }
       return user;
     }
@@ -166,7 +167,7 @@ class UserAPI extends DataSource {
       { expiresIn }
     );
 
-    this.store.set(`USER:${id}:REFRESH_TOKEN:${jti}`, token, "ex", expiresIn);
+    this.store.set(`USER:${id}:REFRESH_TOKEN:${jti}`, token, 'ex', expiresIn);
     return token;
   }
 
@@ -190,10 +191,10 @@ class UserAPI extends DataSource {
       {
         sub,
         iat,
-        scope: ["user"].join(" "),
+        scope: ['user'].join(' '),
       },
       hash,
-      { expiresIn , algorithm:  "RS256"}
+      { expiresIn, algorithm: 'RS256' }
     );
 
     // this.store.set(`USER:${id}:ACCESS_TOKEN:${sub}`, token, "ex", expiresIn);

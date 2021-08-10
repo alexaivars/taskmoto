@@ -1,4 +1,5 @@
 .env
+.eslintcache
 build
 certs
 node_modules

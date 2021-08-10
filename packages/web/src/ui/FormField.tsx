@@ -1,16 +1,17 @@
-import React from "react";
-import styled, { DefaultTheme } from "styled-components";
-import Label from "./Label";
+import React from 'react';
+import styled, { DefaultTheme } from 'styled-components';
+import Label from './Label';
 
 const objectFromEntries = (
-  entries: (string | boolean | undefined)[][]
-): { [key: string]: string | boolean } => {
-  return entries.reduce((acc, [key, value]) => {
-    return key === "string" && value ? { ...acc, [key]: value } : acc;
-  }, {});
-};
+  entries: [string, string | boolean | undefined][]
+): { [key: string]: string | boolean } =>
+  entries.reduce(
+    (acc, [key, value]) =>
+      value !== undefined ? { ...acc, [key]: value } : acc,
+    {}
+  );
 
-type FormFieldProps = {
+export type FormFieldProps = {
   description?: string;
   error?: string;
   id: string;
@@ -32,26 +33,32 @@ const FormFieldComponent: React.FunctionComponent<FormFieldProps> = ({
 }) => {
   return (
     <div className={className}>
-      <Label htmlFor={id}>{label}</Label>
+      <Label htmlFor={id} required={required}>
+        {label}
+      </Label>
       {description && <p>{description}</p>}
       {children &&
         React.cloneElement(
           children,
           objectFromEntries([
-            ["id", id],
-            ["data-required", required],
+            ['id', id],
+            ['data-required', required],
             [
-              "aria-describedby",
+              'aria-describedby',
               error
                 ? `${id}-error`
                 : description
                 ? `${id}-description`
                 : undefined,
             ],
-            ["variant", error ? "failure" : undefined],
+            ['variant', error ? 'failure' : undefined],
           ])
         )}
-      {error && <p id={`${id}-error`}>{error}</p>}
+      {error && (
+        <p className="error" id={`${id}-error`}>
+          {error}
+        </p>
+      )}
     </div>
   );
 };
@@ -59,6 +66,10 @@ const FormFieldComponent: React.FunctionComponent<FormFieldProps> = ({
 export const FormField = styled(FormFieldComponent)`
   & > * + * {
     margin-top: 0.25rem;
+  }
+
+  & > .error {
+    color: ${({ theme }) => theme.error};
   }
 `;
 

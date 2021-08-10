@@ -1,9 +1,10 @@
-import styled, {css} from "styled-components";
+import styled, { css } from 'styled-components';
 
 const Label = styled.label.withConfig({
   shouldForwardProp: (prop, defaultValidatorFn) =>
     !['required'].includes(prop) && defaultValidatorFn(prop),
 })<{ required?: boolean }>`
+  font-weight: 700;
   ${({ required }) =>
     required &&
     css`
@@ -15,4 +16,4 @@ const Label = styled.label.withConfig({
     `}
 `;
 
-export default Label
+export default Label;

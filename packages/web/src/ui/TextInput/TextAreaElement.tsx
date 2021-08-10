@@ -1,12 +1,12 @@
-import React, { TextareaHTMLAttributes } from "react";
+import React, { TextareaHTMLAttributes } from 'react';
 
 export type TextAreaProps = Omit<
   TextareaHTMLAttributes<HTMLTextAreaElement>,
-  "type"
+  'type'
 > & {
-  type: "textarea";
+  type: 'textarea';
   value?: string;
-  resize?: "true" | true | "false" | false;
+  resize?: 'true' | true | 'false' | false;
 };
 
 const TEXTAREA_BORDER_HEIGHT = 2;
@@ -16,21 +16,27 @@ const DynamicTextAreaElementRefRenderFunction: React.ForwardRefRenderFunction<
   HTMLTextAreaElement,
   TextAreaProps
 > = (
-  { value, style, onChange, rows = TEXTAREA_ROWS_DEFAULT, ...props },
+  {
+    value,
+    style,
+    onChange,
+    rows = TEXTAREA_ROWS_DEFAULT,
+    ...props
+  }: TextAreaProps,
   forwardedRef
-): React.ReactElement<"textarea"> => {
+): React.ReactElement<'textarea'> => {
   const ref = React.useRef<HTMLTextAreaElement>(
-    document.createElement("textarea")
+    document.createElement('textarea')
   );
 
   React.useImperativeHandle(forwardedRef, () => ref.current);
 
   const [text, setText] = React.useState<string | undefined>(value);
-  const [textAreaHeight, setTextAreaHeight] = React.useState<string>("auto");
-  const [wrapperHeight, setWrapperHeight] = React.useState<string>("auto");
+  const [textAreaHeight, setTextAreaHeight] = React.useState<string>('auto');
+  const [wrapperHeight, setWrapperHeight] = React.useState<string>('auto');
   const maxHeight =
     style?.maxHeight || ref?.current?.style?.maxHeight || ref?.current
-      ? window.getComputedStyle(ref.current).getPropertyValue("max-height")
+      ? window.getComputedStyle(ref.current).getPropertyValue('max-height')
       : undefined;
 
   React.useEffect(() => {
@@ -44,7 +50,7 @@ const DynamicTextAreaElementRefRenderFunction: React.ForwardRefRenderFunction<
 
   const onChangeHandler = React.useCallback(
     (event) => {
-      setTextAreaHeight("auto");
+      setTextAreaHeight('auto');
       setWrapperHeight(
         `${ref.current.scrollHeight + TEXTAREA_BORDER_HEIGHT}px`
       );
@@ -61,7 +67,7 @@ const DynamicTextAreaElementRefRenderFunction: React.ForwardRefRenderFunction<
     () => ({
       ...style,
       height: textAreaHeight,
-      display: "block",
+      display: 'block',
     }),
     [textAreaHeight, style]
   );
@@ -78,7 +84,7 @@ const DynamicTextAreaElementRefRenderFunction: React.ForwardRefRenderFunction<
     <div style={wrapperStyle}>
       <textarea
         {...props}
-        rows={2}
+        rows={rows}
         value={value}
         onChange={onChangeHandler}
         style={mergedStyle}
@@ -92,17 +98,17 @@ const StaticTextAreaElementRefRenderFunction: React.ForwardRefRenderFunction<
   HTMLTextAreaElement,
   TextAreaProps
 > = (
-  { rows = TEXTAREA_ROWS_DEFAULT, ...props },
+  { rows = TEXTAREA_ROWS_DEFAULT, ...props }: TextAreaProps,
   ref
-): React.ReactElement<"textarea"> => (
+): React.ReactElement<'textarea'> => (
   <textarea {...props} ref={ref} rows={rows || TEXTAREA_ROWS_DEFAULT} />
 );
 
 export const TextAreaElementRefRenderFunction: React.ForwardRefRenderFunction<
   HTMLTextAreaElement,
   TextAreaProps
-> = ({ rows = TEXTAREA_ROWS_DEFAULT, ...props }, ref) =>
-  props.resize === "true" || props.resize === true
+> = (props, ref) =>
+  props.resize === 'true' || props.resize === true
     ? DynamicTextAreaElementRefRenderFunction(props, ref)
     : StaticTextAreaElementRefRenderFunction(props, ref);
 

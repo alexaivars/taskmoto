@@ -1,11 +1,12 @@
-import { NextPageContext } from "next";
+import { NextPageContext } from 'next';
+import { ReactNode } from 'react';
 
-const Error = ({ statusCode }) => {
+const Error = ({ statusCode }: { statusCode: number }): ReactNode => {
   return (
     <p>
       {statusCode
         ? `An error ${statusCode} occurred on server`
-        : "An error occurred on client"}
+        : 'An error occurred on client'}
     </p>
   );
 };

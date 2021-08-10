@@ -1,22 +1,20 @@
 import { Transform } from 'jscodeshift';
 
-const transform: Transform = (fileInfo, api) =>
-{
-  console.log('aa');
+const transform: Transform = (fileInfo, api) => {
   return api
     .jscodeshift(fileInfo.source)
     .find(api.jscodeshift.TSEnumDeclaration)
-    .forEach(path => {
+    .forEach((path) => {
       const enumDeclaration = path.value;
       enumDeclaration.members = enumDeclaration.members.sort((a, b) =>
-        (a.id as any)?.name < (b.id as any)?.name ? -1 : 1,
+        // eslint-disable-next-line
+        (a.id as any)?.name < (b.id as any)?.name ? -1 : 1
       );
     })
     .toSource();
-}
+};
 module.exports = transform;
 module.exports.parser = 'tsx';
-
 
 // import { API, ASTPath, FileInfo, Transform, TSEnumDeclaration, TSEnumMember, TSTypeParameter } from 'jscodeshift';
 
@@ -35,4 +33,3 @@ module.exports.parser = 'tsx';
 
 // module.exports = transform;
 // module.exports.parser = 'tsx';
-

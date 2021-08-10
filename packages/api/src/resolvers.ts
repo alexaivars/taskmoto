@@ -1,13 +1,14 @@
 import * as config from './config';
-import { clearAuthCookies, setAuthCookies } from "./auth";
-import { TimeEntry, Resolvers, ResolverFn, User } from "./generated/types";
-import createError from "http-errors";
-import { Context } from ".";
-import { GraphQLResolveInfo } from "graphql";
+import { clearAuthCookies, setAuthCookies } from './auth';
+import { TimeEntry, Resolvers, ResolverFn, User } from './generated/types';
+import createError from 'http-errors';
+import { Context } from '.';
+import { GraphQLResolveInfo } from 'graphql';
 
-const typeResolver = { __resolveType: (obj: any) => obj.__typename };
+// eslint-disable-next-line
+const typeResolver = { __resolveType: (obj: any): any => obj.__typename };
 
-const NOAUTH_RESOLVERS = ["healthCheck", "login", "signup"];
+const NOAUTH_RESOLVERS = ['healthCheck', 'login', 'signup'];
 
 const resolvers: Resolvers = {
   Error: typeResolver,
@@ -18,17 +19,17 @@ const resolvers: Resolvers = {
   UserResult: typeResolver,
   Query: {
     healthCheck: () => {
-      return "ok";
+      return 'ok';
     },
     me: async (_root, _args, ctx) => {
-      const user:User = await ctx.dataSources.userAPI.getUserById(ctx.userId);
-      return user
+      const user: User = await ctx.dataSources.userAPI.getUserById(ctx.userId);
+      return user;
     },
 
     allTimeEntries: async (_root, _args, ctx) => {
       let entries: TimeEntry[] = [];
       let logEntries: TimeEntry[] = [];
-      let cursor = "0";
+      let cursor = '0';
 
       do {
         [cursor, entries] = await ctx.dataSources.reportAPI.getEntries(
@@ -36,31 +37,44 @@ const resolvers: Resolvers = {
           10
         );
         logEntries = logEntries.concat(entries);
-      } while (cursor !== "0");
+      } while (cursor !== '0');
 
       return {
-        __typename: "TimeEntriesConnection",
+        __typename: 'TimeEntriesConnection',
         cursor,
-        hasMore: cursor !== "0",
+        hasMore: cursor !== '0',
         logEntries,
       };
     },
   },
 
   Mutation: {
+    deleteTime: async (_root, args, ctx) => {
+      const { id } = args;
+      const { dataSources } = ctx;
+      try {
+        const entry = await dataSources.reportAPI.getEntryById(id);
+        return entry;
+      } catch (err) {
+        return {
+          __typename: 'DeleteTimeError',
+          message: (err as Error).message,
+        };
+      }
+    },
     reportTime: async (_root, args, ctx) => {
-      const { minutes, description } = args;
+      const { minutes, name } = args;
       const { dataSources } = ctx;
       try {
         const entry = await dataSources.reportAPI.createLog(
           minutes,
-          description || ""
+          name || ''
         );
         return entry;
       } catch (err) {
         return {
-          __typename: "ReportTimeError",
-          message: err.message,
+          __typename: 'ReportTimeError',
+          message: (err as Error).message,
         };
       }
     },
@@ -85,13 +99,13 @@ const resolvers: Resolvers = {
           accessToken,
         });
         return {
-          __typename: "AuthPayload",
+          __typename: 'AuthPayload',
           user,
         };
       } catch (err) {
         return {
-          __typename: "SignupError",
-          message: err.message,
+          __typename: 'SignupError',
+          message: (err as Error).message,
         };
       }
     },
@@ -120,13 +134,13 @@ const resolvers: Resolvers = {
         });
 
         return {
-          __typename: "AuthPayload",
+          __typename: 'AuthPayload',
           user,
         };
       } catch (err) {
         return {
-          __typename: "LoginError",
-          message: err.message,
+          __typename: 'LoginError',
+          message: (err as Error).message,
         };
       }
     },
@@ -138,38 +152,42 @@ const resolvers: Resolvers = {
         const ok = Boolean(
           await dataSources.userAPI.removeRefreshToken(userId, tokenId)
         );
-        return { __typename: "LogoutPayload", ok };
+        return { __typename: 'LogoutPayload', ok };
       } catch (err) {
         return {
-          __typename: "LogoutError",
-          message: err.message,
+          __typename: 'LogoutError',
+          message: (err as Error).message,
         };
       }
     },
   },
 };
 
-const AuthResolver = (resolver: ResolverFn<any, {}, Context, any>) => async (
-  root: any,
-  args: any,
-  ctx: Context,
-  info: GraphQLResolveInfo
-) => {
-  try {
-    if (!ctx.userId) {
-      throw new createError.Unauthorized();
+const AuthResolver =
+  (resolver: ResolverFn<unknown, unknown, Context, unknown>) =>
+  async (
+    root: unknown,
+    args: unknown,
+    ctx: Context,
+    info: GraphQLResolveInfo
+  ) => {
+    try {
+      if (!ctx.userId) {
+        throw new createError.Unauthorized();
+      }
+      return resolver(root, args, ctx, info);
+    } catch (err) {
+      return {
+        __typename: 'AuthError',
+        message: (err as Error).message,
+      };
     }
-    return resolver(root, args, ctx, info);
-  } catch (err) {
-    return {
-      __typename: "AuthError",
-      message: err.message,
-    };
-  }
-};
+  };
 
 resolvers.Query = Object.entries(
-  resolvers.Query as { [key: string]: any }
+  resolvers.Query as {
+    [key: string]: ResolverFn<unknown, unknown, Context, unknown>;
+  }
 ).reduce(
   (acc, [key, value]) =>
     Object.assign(acc, {
@@ -179,7 +197,9 @@ resolvers.Query = Object.entries(
 );
 
 resolvers.Mutation = Object.entries(
-  resolvers.Mutation as { [key: string]: any }
+  resolvers.Mutation as {
+    [key: string]: ResolverFn<unknown, unknown, Context, unknown>;
+  }
 ).reduce(
   (acc, [key, value]) =>
     Object.assign(acc, {

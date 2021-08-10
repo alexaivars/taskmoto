@@ -1,5 +1,5 @@
-import { createGlobalStyle, css } from "styled-components";
-import { normalize } from 'styled-normalize'
+import { createGlobalStyle, css } from 'styled-components';
+import { normalize } from 'styled-normalize';
 
 const reset = css`
   *,
@@ -55,11 +55,11 @@ const reset = css`
     padding: 0;
     margin: 0;
   }
-`
+`;
 
 const typography = css`
-  html{ 
-   font-size: 16px;
+  html {
+    font-size: 16px;
   }
   body {
     font-sze: 1rem;
@@ -68,7 +68,7 @@ const typography = css`
     line-height: 1.3;
     color: ${(props) => props.theme.text};
   }
-`
+`;
 export const GlobalStyle = createGlobalStyle`
   ${normalize}
   ${reset}

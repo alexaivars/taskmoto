@@ -7,18 +7,18 @@ scalar DateTime
 scalar Minutes
 
 """
-A single log entry with a amount of time and description
+A single log entry with a amount of time and name
 """
 type TimeEntry {
   id: ID!
   minutes: Minutes!
-  description: String
+  name: String!
 }
 
 type TimeEntriesConnection {
   cursor: String!
   hasMore: Boolean!
-  logEntries: [TimeEntry]!
+  logEntries: [TimeEntry!]!
 }
 
 type User {
@@ -30,45 +30,50 @@ type User {
 union UserResult = User | AuthError
 
 interface Error {
-  message: String
+  message: String!
 }
 
 type AuthPayload {
-  user: User
+  user: User!
 }
 
 type LogoutPayload {
-  ok: Boolean
+  ok: Boolean!
 }
 
 type SignupError implements Error {
-  message: String
+  message: String!
 }
 
 type LoginError implements Error {
-  message: String
+  message: String!
 }
 
 type LogoutError implements Error {
-  message: String
+  message: String!
 }
 
 type ReportTimeError implements Error {
-  message: String
+  message: String!
+}
+
+type DeleteTimeError implements Error {
+  message: String!
 }
 
 type AuthError implements Error {
-  message: String
+  message: String!
 }
 
 union ReportTimeResult = TimeEntry | ReportTimeError | AuthError
 union SignupResult = AuthPayload | SignupError
 union LoginResult = AuthPayload | LoginError | AuthError
 union LogoutResult = LogoutPayload | LogoutError | AuthError
+union DeleteTimeResult = TimeEntry | DeleteTimeError | AuthError
 
 type Query {
   healthCheck: String
-  me: UserResult
+  me: UserResult!
   allTimeEntries: TimeEntriesConnection
 }
 
@@ -76,12 +81,9 @@ type Mutation {
   """
   Create log entry and return the newly created entry or error if unsuccessful
   """
-  reportTime(minutes: Minutes!, description: String): ReportTimeResult
-
+  reportTime(minutes: Minutes!, name: String): ReportTimeResult
+  deleteTime(id: ID!): DeleteTimeResult
   signup(username: String!, password: String!): SignupResult
-
   login(username: String!, password: String!): LoginResult
-
   logout: LogoutResult
-
 }

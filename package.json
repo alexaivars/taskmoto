@@ -2,12 +2,26 @@
   "private": true,
   "name": "@taskmoto/workspace",
   "scripts": {
-    "dev": "node scripts/start-dev.js"
+    "dev": "node scripts/start-dev.js",
+    "prepare": "husky install"
   },
   "workspaces": [
     "packages/*"
   ],
   "devDependencies": {
-    "concurrently": "^6.0.2"
+    "@typescript-eslint/eslint-plugin": "4.32.0",
+    "@typescript-eslint/parser": "4.32.0",
+    "concurrently": "6.2.2",
+    "eslint": "7.32.0",
+    "eslint-plugin-react": "7.26.0",
+    "husky": ">=6",
+    "lint-staged": ">=10"
+  },
+  "dependencies": {},
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "eslint --cache --fix",
+      "prettier --ignore-unknown --write"
+    ]
   }
 }

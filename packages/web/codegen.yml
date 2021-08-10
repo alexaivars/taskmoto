@@ -1,38 +1,38 @@
-schema:
-  - ${API_URL:https://localhost:8443}/graphql:
-      # headers:
-      #   graphql-api-key: ${API_KEY}
-  # - 'src/components/SetupProvider/mock.ts'
+overwrite: true
+schema: ${API_URL:https://localhost:8443}/graphql
+# headers:
+#   graphql-api-key: ${API_KEY}
+# - 'src/components/SetupProvider/mock.ts'
+documents:
+  - "./src/**/*.{js,jsx,ts,tsx}"
+  - '!./src/generated'
 generates:
-  src/generated/graphql-schema.json:
+  ./src/generated/graphql.tsx:
     plugins:
-      - introspection
-    # hooks:
-    #   afterOneFileWrite:
-    #     - node scripts/afterOneFileWriteSortJSON.js
-  src/generated/possible-types.json:
-    plugins:
-      - fragment-matcher
-    # hooks:
-    #   afterOneFileWrite:
-    #     - node scripts/afterOneFileWriteSortJSON.js
-  src/generated/graphql.tsx:
-    documents:
-      - ./src/**/*.{js,jsx,ts,tsx}
-      - '!./src/generated'
-    plugins:
-      - typescript
-      - typescript-operations
-      - typescript-react-apollo
+      - "typescript"
+      - "typescript-operations"
+      - "typescript-react-apollo"
     config:
       avoidOptionals:
         field: true
       nonOptionalTypename: true
-      onlyOperationTypes: true
+      onlyOperationTypes: false
       preResolveTypes: true
-    hooks:
-      afterOneFileWrite:
-        - yarn jscodeshift -t codegenSortTsx.ts
-  src/generated/apollo-helpers.ts:
+    # hooks:
+    #   afterOneFileWrite:
+    #     - yarn jscodeshift -t codegenSortTsx.ts
+
+  ./src/generated/graphql-schema.json:
     plugins:
-      - typescript-apollo-client-helpers
+      - "introspection"
+
+  ./src/generated/possible-types.json:
+    plugins:
+     - "fragment-matcher"
+    config:
+     apolloClientVersion: 3
+
+  ./src/generated/apollo-helpers.ts:
+    plugins:
+      - "typescript-apollo-client-helpers"
+

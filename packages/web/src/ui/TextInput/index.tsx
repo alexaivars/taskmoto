@@ -1,51 +1,51 @@
-import React from "react";
-import styled, { css, StyledComponent } from "styled-components";
-import TextElement, { TextProps } from "./TextElement";
-import SearchElement, { SearchProps } from "./SearchElement";
-import TextAreaElement, { TextAreaProps } from "./TextAreaElement";
-import {focus, background } from "../styles";
+import React from 'react';
+import styled, { css } from 'styled-components';
+import TextElement, { TextProps } from './TextElement';
+import SearchElement, { SearchProps } from './SearchElement';
+import TextAreaElement, { TextAreaProps } from './TextAreaElement';
+import { focus, background } from '../styles';
 
 type ElementProps = TextProps | SearchProps | TextAreaProps;
 
 const TextInputRefRenderFunction: React.ForwardRefRenderFunction<
   HTMLInputElement & HTMLTextAreaElement,
   ElementProps
-> = (
-  props,
-  ref,
-) => {
+> = (props: ElementProps, ref) => {
   switch (props.type) {
-    case "textarea":
-      return <TextAreaElement {...props} ref={ref}/>;
-    case "search":
-      return <SearchElement {...props} ref={ref}/>;
+    case 'textarea':
+      return <TextAreaElement {...props} ref={ref} />;
+    case 'search':
+      return <SearchElement {...props} ref={ref} />;
     default:
-      return <TextElement {...props} ref={ref}/>;
+      return <TextElement {...props} ref={ref} />;
   }
 };
 
 const TextInputComponent = React.forwardRef(TextInputRefRenderFunction);
 
-export type TextInputProps = ElementProps & { variant?: "success" | "failure" };
+export type TextInputProps = ElementProps & { variant?: 'success' | 'failure' };
 
 export const TextInput = styled(TextInputComponent)<TextInputProps>`
-  ${({theme}) => background(theme.primary)}
+  ${({ theme }) => background(theme.primary, true)}
   width: 100%;
-  border: 1px solid ${(props) => props.theme.primaryDark};
+  border: 1px solid
+    ${({ theme, variant }) => {
+      return variant === 'failure' ? theme.error : theme.primaryDark;
+    }};
   border-radius: 0.25rem;
   padding: calc(0.75rem - 1px) calc(1rem - 1px);
   ${(props) =>
-    props.type === "textarea" &&
+    props.type === 'textarea' &&
     css`
-      resize: ${props.resize ? "vertical" : "none"};
+      resize: ${props.resize ? 'vertical' : 'none'};
       min-height: 2.75rem;
-  `}
+    `}
 
-  ${({theme, variant}) => {
-    switch(variant){
-      case "success":
+  ${({ theme, variant }) => {
+    switch (variant) {
+      case 'success':
         return focus(theme.success);
-      case "failure":
+      case 'failure':
         return focus(theme.error);
       default:
         return focus(theme.primary);
@@ -62,7 +62,7 @@ export const TextInput = styled(TextInputComponent)<TextInputProps>`
     opacity: 0.5;
   }
   ${({ type }) =>
-    type === "search" &&
+    type === 'search' &&
     css`
       padding-right: 2.375rem;
       &::-ms-clear {

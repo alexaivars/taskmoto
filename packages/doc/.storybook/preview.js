@@ -1,11 +1,11 @@
 import { ThemeProvider } from "styled-components";
-import { lightTheme } from "@taskmoto/web/src/ui/theme";
+import { light } from "@taskmoto/web/src/ui/theme";
 import GlobalStyle from "@taskmoto/web/src/ui/GlobalStyle";
 
 export const decorators = [
   function WithStyles(Story) {
     return (
-      <ThemeProvider theme={lightTheme}>
+      <ThemeProvider theme={light}>
         <GlobalStyle />
         <Story />
       </ThemeProvider>

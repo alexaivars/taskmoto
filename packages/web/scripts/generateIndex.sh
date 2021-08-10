@@ -7,7 +7,7 @@ for path in $SRC/*; do
   file=$(basename "$path")
   ext="${file##*.}"
   name="${file%.*}"
-  if [[ "$name" != "index" ]]; then
+  if [[ "$name" != "index" && "$name" != *.stories ]]; then
     if [[ -d "$path" || "$ext" == "ts" || "$ext" == "tsx" || "$ext" == "js" || "$ext" == "jsx" ]]; then
       if [[ "${name:0:1}" == [[:lower:]] ]]; then
         echo "export * as $name from './$name';" >> $INDEX_FILE
@@ -20,7 +20,7 @@ for path in $SRC/*; do
   file=$(basename "$path")
   ext="${file##*.}"
   name="${file%.*}"
-  if [[ "$name" != "index" ]]; then
+  if [[ "$name" != "index" && "$name" != *.stories ]]; then
     if [[ -d "$path" || "$ext" == "ts" || "$ext" == "tsx" || "$ext" == "js" || "$ext" == "jsx" ]]; then
       if [[ "${name:0:1}" != [[:lower:]] ]]; then
         echo "export { default as $name } from './$name';" >> $INDEX_FILE
