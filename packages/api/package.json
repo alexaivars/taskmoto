@@ -21,7 +21,7 @@
     "@graphql-codegen/cli": "2.0.1",
     "@graphql-codegen/introspection": "2.0.0",
     "@graphql-codegen/typescript": "2.0.0",
-    "@graphql-codegen/typescript-document-nodes": "2.0.0",
+    "@graphql-codegen/typescript-document-nodes": "2.1.4",
     "@graphql-codegen/typescript-resolvers": "2.0.0",
     "@types/cookie": "^0.4.1",
     "@types/dotenv": "^8.2.0",
