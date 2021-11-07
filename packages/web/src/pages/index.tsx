@@ -13,7 +13,7 @@ import {
 } from 'generated/graphql';
 import Layout from 'components/Layout';
 import { List, Form, FormField, Button, ButtonField, TextInput } from 'ui';
-import { ReactNode, SyntheticEvent } from 'react';
+import { ReactNode, SyntheticEvent, useState, useEffect } from 'react';
 
 const { serverRuntimeConfig: config } = getConfig();
 
@@ -108,6 +108,7 @@ export default function Home(): ReactNode {
   const { data } = useMeQuery();
   const [save] = useSaveTimeEntryMutation();
   const [remove] = useDeleteTimeEntryMutation();
+  const [modifier, setModifier] = useState<null | string>(null);
   const errorMessage = '';
   const { data: allTimeEntriesData, refetch } = useAllTimeEntriesQuery();
 
@@ -115,6 +116,27 @@ export default function Home(): ReactNode {
 
   const user: User | undefined =
     data?.me?.__typename === 'User' ? data.me : undefined;
+  useEffect(() => {
+    const watchModifier = (event) => {
+      console.log(event.key);
+      if (event.key === 'Meta') {
+        setModifier('meta');
+      } else {
+        setModifier(null);
+      }
+    };
+
+    const clearModifier = () => {
+      setModifier(null);
+    };
+
+    window.addEventListener('keydown', watchModifier);
+    window.addEventListener('keyup', clearModifier);
+    return () => {
+      window.removeEventListener('keydown', watchModifier);
+      window.removeEventListener('keyup', clearModifier);
+    };
+  }, []);
 
   const handleSubmit = (
     e: SyntheticEvent<HTMLButtonElement | HTMLFormElement>
@@ -140,13 +162,12 @@ export default function Home(): ReactNode {
   if (!user) {
     return null;
   }
-
-  const now = new Date();
+  const offset = 1;
+  const now = ((d) => new Date(d.setDate(d.getDate() + offset)))(new Date());
   const today = `${now.getFullYear()}-${now
     .getMonth()
     .toString()
     .padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`;
-
   return (
     <Layout user={user} title={`Wellcome ${user.username}`}>
       <Form onSubmit={handleSubmit}>
@@ -162,7 +183,7 @@ export default function Home(): ReactNode {
         </FormField>
         <ButtonField>
           <Button type="submit" name="add" onClick={handleSubmit}>
-            Add
+            {modifier === 'meta' ? 'Next' : 'Add'}
           </Button>
         </ButtonField>
       </Form>
