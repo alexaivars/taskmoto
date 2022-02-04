@@ -117,8 +117,7 @@ export default function Home(): ReactNode {
   const user: User | undefined =
     data?.me?.__typename === 'User' ? data.me : undefined;
   useEffect(() => {
-    const watchModifier = (event) => {
-      console.log(event.key);
+    const watchModifier = (event: KeyboardEvent) => {
       if (event.key === 'Meta') {
         setModifier('meta');
       } else {
@@ -206,6 +205,7 @@ export default function Home(): ReactNode {
           },
         }}
       </List>
+      Total: {entries.reduce((acc, entry) => acc + entry.minutes, 0)}
     </Layout>
   );
 }

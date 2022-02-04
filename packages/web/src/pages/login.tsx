@@ -46,7 +46,11 @@ const Login = (): ReactNode => {
       ? undefined
       : payload?.message;
 
-  if (payload?.__typename === 'AuthPayload') {
+  console.log(loginData, signupData);
+  if (
+    loginData?.login?.__typename === 'AuthPayload' ||
+    signupData?.signup?.__typename === 'AuthPayload'
+  ) {
     Router.push('/');
   }
 
