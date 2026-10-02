@@ -64,6 +64,26 @@ export async function createApp(store: Redis, config: Config, logger = true) {
         : undefined,
     }),
   });
-  app.get('/health', async () => ({ ok: true }));
+  app.get('/health', async (_request, reply) => {
+    reply.header('cache-control', 'no-store');
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    try {
+      const result = await Promise.race([
+        store.ping(),
+        new Promise<never>((_resolve, reject) => {
+          timer = setTimeout(
+            () => reject(new Error('Readiness timeout')),
+            1500,
+          );
+        }),
+      ]);
+      if (result !== 'PONG') throw new Error('Redis unavailable');
+      return { ok: true };
+    } catch {
+      return reply.code(503).send({ ok: false });
+    } finally {
+      clearTimeout(timer);
+    }
+  });
   return app;
 }

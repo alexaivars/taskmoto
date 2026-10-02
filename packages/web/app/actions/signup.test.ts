@@ -3,6 +3,35 @@ import assert from 'node:assert/strict';
 import { router } from '../router.ts';
 
 const origin = 'https://localhost:3000';
+test('public readiness checks API readiness and hides failures', async (t) => {
+  const fetch = t.mock.method(
+    globalThis,
+    'fetch',
+    async (url: URL, init: RequestInit) => {
+      assert.equal(url.pathname, '/health');
+      assert.ok(init.signal);
+      return Response.json({ ok: true });
+    },
+  );
+  assert.equal(
+    (await router.fetch(new Request(`${origin}/health`))).status,
+    200,
+  );
+  fetch.mock.mockImplementation(async () =>
+    Response.json({ ok: false }, { status: 503 }),
+  );
+  assert.equal(
+    (await router.fetch(new Request(`${origin}/health`))).status,
+    503,
+  );
+  fetch.mock.mockImplementation(async () => {
+    throw new Error('private upstream address');
+  });
+  const response = await router.fetch(new Request(`${origin}/health`));
+  assert.equal(response.status, 503);
+  assert.deepEqual(await response.json(), { ok: false });
+  assert.equal(response.headers.get('cache-control'), 'no-store');
+});
 function register(password: string, confirmation?: string) {
   const body = new URLSearchParams({ username: 'confirmation-user', password });
   if (confirmation !== undefined) body.set('confirmPassword', confirmation);

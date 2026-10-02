@@ -7,6 +7,7 @@ import { render } from 'remix/middleware/render';
 import { formData } from 'remix/middleware/form-data';
 import { staticFiles } from 'remix/middleware/static';
 import { assets } from './assets.ts';
+import { apiUrl } from './api.ts';
 import { routes } from './routes.ts';
 import controller from './actions/controller.tsx';
 const renderMiddleware = render({ assets });
@@ -80,5 +81,23 @@ export const router = createRouter<AppContext>({
     formMiddleware,
     renderMiddleware,
   ],
+});
+router.get('/health', async () => {
+  let ok = false;
+  try {
+    const response = await fetch(new URL('/health', apiUrl), {
+      signal: AbortSignal.timeout(2500),
+    });
+    ok = response.ok && (await response.json()).ok === true;
+  } catch {
+    // Readiness deliberately reveals no internal connection details.
+  }
+  return Response.json(
+    { ok },
+    {
+      status: ok ? 200 : 503,
+      headers: { 'cache-control': 'no-store' },
+    },
+  );
 });
 router.map(routes, controller);

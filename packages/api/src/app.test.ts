@@ -96,6 +96,20 @@ after(async () => {
   }
   if (directory) await rm(directory, { recursive: true, force: true });
 });
+test('readiness fails when Redis is unavailable or exceeds its deadline', async (t) => {
+  assert.equal((await app.inject('/health')).statusCode, 200);
+  const ping = t.mock.method(store, 'ping', () =>
+    Promise.reject(new Error('private connection details')),
+  );
+  const failed = await app.inject('/health');
+  assert.equal(failed.statusCode, 503);
+  assert.deepEqual(failed.json(), { ok: false });
+  assert.equal(failed.headers['cache-control'], 'no-store');
+  ping.mock.mockImplementation(() => new Promise<never>(() => {}));
+  const started = Date.now();
+  assert.equal((await app.inject('/health')).statusCode, 503);
+  assert.ok(Date.now() - started < 2500);
+});
 test('anonymous clients cannot create or read private entries', async () => {
   assert.equal(
     (await operation(ReportTime, { minutes: 10, name: 'private' })).json().data

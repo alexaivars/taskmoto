@@ -43,6 +43,8 @@ In production, set `NODE_ENV=production`, `WEB_ORIGIN` to the public HTTPS origi
 
 ## Verification
 
+For manual Docker deployment to a Linux server, see [deployment instructions](docs/deployment.md).
+
 ```sh
 yarn build
 yarn test

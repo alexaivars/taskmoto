@@ -1,0 +1,103 @@
+name: taskmoto
+services:
+  redis:
+    image: redis:7.4.7-alpine
+    command:
+      [
+        redis-server,
+        --appendonly,
+        'yes',
+        --appendfsync,
+        everysec,
+        --save,
+        '',
+        --maxmemory,
+        64mb,
+        --maxmemory-policy,
+        noeviction,
+      ]
+    volumes: [redis_data:/data]
+    restart: unless-stopped
+    mem_limit: 128m
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    networks: [backend]
+  api:
+    image: taskmoto-api:${REVISION:?REVISION is required}
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      API_PORT: '8443'
+      REDIS_URL: redis://redis:6379
+      WEB_ORIGIN: https://${DEPLOY_DOMAIN:?DEPLOY_DOMAIN is required}
+      JWT_ACCESS_TOKEN_SECRET_FILE: /run/keys/private.pem
+      JWT_ACCESS_TOKEN_PUBLIC_FILE: /run/keys/public.pem
+      NODE_OPTIONS: --max-old-space-size=96
+    volumes: [/srv/taskmoto/keys:/run/keys:ro]
+    depends_on:
+      redis: { condition: service_healthy }
+    restart: unless-stopped
+    mem_limit: 224m
+    healthcheck:
+      test:
+        [
+          CMD,
+          node,
+          -e,
+          "fetch('http://127.0.0.1:8443/health',{signal:AbortSignal.timeout(3000)}).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    networks: [backend, frontend]
+  web:
+    image: taskmoto-web:${REVISION:?REVISION is required}
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      WEB_PORT: '3000'
+      API_URL: http://api:8443/graphql
+      WEB_ORIGIN: https://${DEPLOY_DOMAIN:?DEPLOY_DOMAIN is required}
+      NODE_OPTIONS: --max-old-space-size=128
+    depends_on:
+      api: { condition: service_healthy }
+    restart: unless-stopped
+    mem_limit: 288m
+    healthcheck:
+      test:
+        [
+          CMD,
+          node,
+          -e,
+          "fetch('http://127.0.0.1:3000/health',{signal:AbortSignal.timeout(4000)}).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    networks: [frontend]
+  caddy:
+    image: caddy:2.10.2-alpine
+    environment:
+      DEPLOY_DOMAIN: ${DEPLOY_DOMAIN:?DEPLOY_DOMAIN is required}
+    ports: ['80:80', '443:443']
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      web: { condition: service_healthy }
+    restart: unless-stopped
+    mem_limit: 96m
+    networks: [frontend]
+networks:
+  backend: { internal: true }
+  frontend: {}
+volumes:
+  redis_data: { name: taskmoto_redis_data }
+  caddy_data: { name: taskmoto_caddy_data }
+  caddy_config: { name: taskmoto_caddy_config }
