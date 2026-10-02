@@ -1,5 +1,7 @@
 # Deploy Taskmoto to Linode
 
+Status: complete — verified on 2026-10-02. See [verification results](../docs/verification/linode-deployment.md).
+
 ## Objective
 
 Deploy the current Taskmoto app to one Linode Linux machine using Docker Compose and the public domain configured in `.env.deploy`. The canonical production URL is `https://${DEPLOY_DOMAIN}`. Deployment is initiated manually from the developer's local machine over SSH. Keep recurring costs low and accept brief downtime during deployment.
@@ -89,18 +91,18 @@ The implementation must resolve temporary transfer-file cleanup, image retention
 
 Completion requires a deployment on the actual Linode, not only configuration files or a local Compose run.
 
-- [ ] Dockerfiles, Compose configuration, manual deployment procedure, environment example, and operating instructions are in the repository, with no secrets committed.
-- [ ] Deployment reads the target and domain from the ignored `.env.deploy`; committed configuration uses variables or placeholders, with no hardcoded deployment-specific values.
-- [ ] The single deploy command safely detects/runs missing setup, handles the first host-service transition, rejects overlapping deployments, and can resume after an interrupted attempt without replacing keys or storage.
-- [ ] Tests and deployed images come from the exact selected committed revision. Uncommitted local changes are excluded and preserved. Failures in checks, builds, transfer, setup, or readiness produce a nonzero exit and a clear diagnostic.
-- [ ] The selected release runs on Linode and is reachable at `https://${DEPLOY_DOMAIN}` with valid HTTPS.
-- [ ] `https://${DEPLOY_DOMAIN}/health` returns HTTP 200 with healthy web/API/Redis services. API or Redis unavailability produces HTTP 503 within a bounded timeout, and the deployment command reports failure when the health check does not pass.
-- [ ] Account creation, password login, work-entry creation/deletion, and logout work through the deployed UI. Passkey registration/login is verified on the production domain with a compatible browser.
-- [ ] API and Redis are reachable internally and are not exposed through public container ports.
-- [ ] A test account and work entry survive a second manual deployment and replacement of the web/API containers.
-- [ ] The same records survive Redis container recreation with the original persistent mount and a Linode reboot.
-- [ ] The manual procedure can deploy a corrected release after a failed app startup, with the original Redis test records intact. Reverting to an earlier image is not required.
-- [ ] Startup/deployment memory and disk observations are recorded, alongside any known limitations. The app runs within the existing Linode allocation without a resize or additional paid services.
-- [ ] Deployment is manual only. GitHub Actions and automatic deployment remain deferred.
+- [x] Dockerfiles, Compose configuration, manual deployment procedure, environment example, and operating instructions are in the repository, with no secrets committed.
+- [x] Deployment reads the target and domain from the ignored `.env.deploy`; committed configuration uses variables or placeholders, with no hardcoded deployment-specific values.
+- [x] The single deploy command safely detects/runs missing setup, handles the first host-service transition, rejects overlapping deployments, and can resume after an interrupted attempt without replacing keys or storage.
+- [x] Tests and deployed images come from the exact selected committed revision. Uncommitted local changes are excluded and preserved. Failures in checks, builds, transfer, setup, or readiness produce a nonzero exit and a clear diagnostic.
+- [x] The selected release runs on Linode and is reachable at `https://${DEPLOY_DOMAIN}` with valid HTTPS.
+- [x] `https://${DEPLOY_DOMAIN}/health` returns HTTP 200 with healthy web/API/Redis services. API or Redis unavailability produces HTTP 503 within a bounded timeout, and the deployment command reports failure when the health check does not pass.
+- [x] Account creation, password login, work-entry creation/deletion, and logout work through the deployed UI. Passkey registration/login is verified on the production domain with a compatible browser.
+- [x] API and Redis are reachable internally and are not exposed through public container ports.
+- [x] A test account and work entry survive a second manual deployment and replacement of the web/API containers.
+- [x] The same records survive Redis container recreation with the original persistent mount and a Linode reboot.
+- [x] The manual procedure can deploy a corrected release after a failed app startup, with the original Redis test records intact. Reverting to an earlier image is not required.
+- [x] Startup/deployment memory and disk observations are recorded, alongside any known limitations. The app runs within the existing Linode allocation without a resize or additional paid services.
+- [x] Deployment is manual only. GitHub Actions and automatic deployment remain deferred.
 
 Record the deployed commit, verification date, and results in the deployment documentation. Stop short of claiming completion if server access, DNS, or required production configuration prevents actual verification.
