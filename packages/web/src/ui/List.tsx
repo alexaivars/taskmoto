@@ -1,6 +1,7 @@
 import { Children, FunctionComponent, ReactElement } from 'react';
 import styled from 'styled-components';
-import { Button, Icon } from 'ui';
+import Button from './Button';
+import Icon from './Icon';
 import { background } from './styles';
 
 type ListProps = {
@@ -70,7 +71,7 @@ export const ListElement = ({
 };
 
 export const List = styled<FunctionComponent<ListProps>>(
-  ListElement
+  ListElement,
 )<ListProps>``;
 
 export default List;

@@ -1,11 +1,9 @@
 import SecurePassword from 'secure-password';
 import createError from 'http-errors';
 import jwt from 'jsonwebtoken';
-import { IDataSources } from '..';
-import { DataSource, DataSourceConfig } from 'apollo-datasource';
 import { Redis } from 'ioredis';
 import { User } from '../generated/types';
-import { v1 as uuid } from 'uuid';
+import { randomUUID } from 'crypto';
 
 const userFromHash = (hash: { [key: string]: string }): User => {
   const { id, username }: { id?: string; username?: string } = hash;
@@ -16,20 +14,13 @@ const userFromHash = (hash: { [key: string]: string }): User => {
   };
 };
 
-class UserAPI extends DataSource {
+class UserAPI {
   store: Redis;
-  context?: IDataSources;
   pwd: SecurePassword;
 
   constructor({ store }: { store: Redis }) {
-    super();
     this.store = store;
-    this.context = undefined;
     this.pwd = new SecurePassword();
-  }
-
-  initialize(config: DataSourceConfig<IDataSources>): void {
-    this.context = config.context;
   }
 
   async getUserHash(id: string): Promise<string> {
@@ -42,7 +33,7 @@ class UserAPI extends DataSource {
 
   async getUserById(id: string): Promise<User> {
     const user: User = userFromHash(
-      await this.store.hgetall(`USER:${id}:DATA`)
+      await this.store.hgetall(`USER:${id}:DATA`),
     );
     if (!user) {
       throw new createError.Unauthorized('User not found');
@@ -57,7 +48,7 @@ class UserAPI extends DataSource {
       throw new createError.Unauthorized('User not found');
     }
     const user: User = userFromHash(
-      await this.store.hgetall(`USER:${id}:DATA`)
+      await this.store.hgetall(`USER:${id}:DATA`),
     );
     return user;
   }
@@ -70,7 +61,7 @@ class UserAPI extends DataSource {
       throw new Error('Username must be unique');
     }
     do {
-      id = uuid();
+      id = randomUUID();
       exists = await this.store.exists(`USER:${id}:NAME`);
     } while (exists);
     await this.store.set(`NAME:ID:${key}`, id);
@@ -92,7 +83,7 @@ class UserAPI extends DataSource {
     const hash: string = await this.getUserHash(user.id);
     const result: symbol = await this.pwd.verify(
       userPassword,
-      Buffer.from(hash, 'base64')
+      Buffer.from(hash, 'base64'),
     );
 
     switch (result) {
@@ -101,7 +92,7 @@ class UserAPI extends DataSource {
           const improvedHash = await this.pwd.hash(userPassword);
           await this.store.set(
             `USER:${user.id}:HASH`,
-            improvedHash.toString('base64')
+            improvedHash.toString('base64'),
           );
           // Save improvedHash somewhere
         } catch (err) {
@@ -121,7 +112,7 @@ class UserAPI extends DataSource {
       const user: User = await this.getUserById(id);
       const hash: string = await this.getUserHash(id);
       const exists: number = await this.store.exists(
-        `USER:${id}:TOKEN:${token}`
+        `USER:${id}:TOKEN:${token}`,
       );
       const clockTimestamp: number = await this.getTimestamp();
 
@@ -151,7 +142,7 @@ class UserAPI extends DataSource {
   async createRefreshToken(id: string, iat?: number): Promise<string> {
     const expiresIn: number = 60 * 60 * 24 * 7;
     const hash: string = await this.getUserHash(id);
-    const jti: string = uuid();
+    const jti: string = randomUUID();
 
     if (!iat) {
       iat = await this.getTimestamp();
@@ -164,17 +155,17 @@ class UserAPI extends DataSource {
         jti,
       },
       hash,
-      { expiresIn }
+      { expiresIn },
     );
 
-    this.store.set(`USER:${id}:REFRESH_TOKEN:${jti}`, token, 'ex', expiresIn);
+    this.store.set(`USER:${id}:REFRESH_TOKEN:${jti}`, token, 'EX', expiresIn);
     return token;
   }
 
   async createAccessToken(
     id: string,
     hash?: string,
-    iat?: number
+    iat?: number,
   ): Promise<string> {
     const expiresIn: number = 60 * 5;
     const sub: string = id;
@@ -194,7 +185,7 @@ class UserAPI extends DataSource {
         scope: ['user'].join(' '),
       },
       hash,
-      { expiresIn, algorithm: 'RS256' }
+      { expiresIn, algorithm: 'RS256' },
     );
 
     // this.store.set(`USER:${id}:ACCESS_TOKEN:${sub}`, token, "ex", expiresIn);

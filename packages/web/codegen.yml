@@ -1,5 +1,5 @@
 overwrite: true
-schema: ${API_URL:https://localhost:8443}/graphql
+schema: ../api/src/schema.graphql
 # headers:
 #   graphql-api-key: ${API_KEY}
 # - 'src/components/SetupProvider/mock.ts'
@@ -11,8 +11,11 @@ generates:
     plugins:
       - "typescript"
       - "typescript-operations"
-      - "typescript-react-apollo"
+      - "typed-document-node"
     config:
+      scalars:
+        DateTime: string
+        Minutes: number
       avoidOptionals:
         field: true
       nonOptionalTypename: true
@@ -31,8 +34,3 @@ generates:
      - "fragment-matcher"
     config:
      apolloClientVersion: 3
-
-  ./src/generated/apollo-helpers.ts:
-    plugins:
-      - "typescript-apollo-client-helpers"
-

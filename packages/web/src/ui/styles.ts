@@ -1,13 +1,9 @@
-import {
-  css,
-  DefaultTheme,
-  FlattenSimpleInterpolation,
-} from 'styled-components';
+import { css, DefaultTheme, RuleSet } from 'styled-components';
 import { lighten, readableColor, tint } from 'polished';
 
 type ThemeValue = ((theme: DefaultTheme) => string) | string;
 
-export function color(color: string): FlattenSimpleInterpolation {
+export function color(color: string): RuleSet<object> {
   return css`
     & {
       color: ${readableColor(color)};
@@ -17,8 +13,8 @@ export function color(color: string): FlattenSimpleInterpolation {
 
 export function background(
   color: string,
-  tintBackground?: boolean
-): FlattenSimpleInterpolation {
+  tintBackground?: boolean,
+): RuleSet<object> {
   const bg = tintBackground ? tint(0.95, color) : color;
   return css`
     & {
@@ -31,13 +27,14 @@ export function background(
   `;
 }
 
-export function focus(color: string): FlattenSimpleInterpolation {
+export function focus(color: string): RuleSet<object> {
   return css`
     &:focus {
       position: relative;
       z-index: 1;
       outline: none;
-      box-shadow: inset 0 0 0 1px ${lighten(0.1, color)},
+      box-shadow:
+        inset 0 0 0 1px ${lighten(0.1, color)},
         0 0 0 3px ${lighten(0.2, color)};
     }
   `;
@@ -45,7 +42,7 @@ export function focus(color: string): FlattenSimpleInterpolation {
 
 export function variant<T extends string>(
   map: Record<T, ThemeValue>,
-  defaultKey: T
+  defaultKey: T,
 ) {
   return function variantResolver({
     theme,

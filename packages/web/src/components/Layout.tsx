@@ -1,10 +1,11 @@
-import { gql, useMutation } from '@apollo/client';
-import { LogoutResult, User } from 'generated/graphql';
+import { gql } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
+import { LogoutDocument, User } from 'generated/graphql';
 import { ReactElement, ReactNode, useEffect } from 'react';
 import { Button, Page } from 'ui';
 import { useRouter } from 'next/router';
 
-const LOGOUT = gql`
+gql`
   mutation logout {
     logout {
       ... on Error {
@@ -24,7 +25,7 @@ const Layout = ({
   children: ReactNode;
 }): ReactElement => {
   const router = useRouter();
-  const [logout, { data }] = useMutation<LogoutResult>(LOGOUT);
+  const [logout, { data }] = useMutation(LogoutDocument);
   const hasUser = Boolean(user?.id);
 
   console.log({ data });

@@ -1,17 +1,12 @@
 import React, { InputHTMLAttributes } from 'react';
-import styled, { css, DefaultTheme, StyledComponent } from 'styled-components';
+import styled, { css } from 'styled-components';
 
 export type SearchProps = Omit<
   InputHTMLAttributes<HTMLInputElement>,
   'type'
 > & { type: 'search' };
 
-const ClearWrapper: StyledComponent<
-  'div',
-  DefaultTheme,
-  Record<string, unknown>,
-  never
-> = styled.div`
+const ClearWrapper = styled.div`
   position: relative;
   display: inline-block;
   width: 100%;
@@ -77,7 +72,7 @@ const ClearContainer = ({
       const nativeInputValueSetter: ((v: unknown) => void) | undefined = (
         Object.getOwnPropertyDescriptor(
           window.HTMLInputElement.prototype,
-          'value'
+          'value',
         ) as PropertyDescriptor
       ).set;
       nativeInputValueSetter?.call(input, '');

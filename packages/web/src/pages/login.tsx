@@ -1,6 +1,7 @@
 import Router from 'next/router';
 import { gql } from '@apollo/client';
-import { useLoginMutation, useSignupMutation } from 'generated/graphql';
+import { useMutation } from '@apollo/client/react';
+import { LoginDocument, SignupDocument } from 'generated/graphql';
 import { Form, Button, TextInput, ButtonField, FormField } from 'ui';
 import Layout from 'components/Layout';
 import { ReactNode, SyntheticEvent, useCallback } from 'react';
@@ -38,8 +39,8 @@ gql`
 `;
 
 const Login = (): ReactNode => {
-  const [login, { data: loginData }] = useLoginMutation();
-  const [signup, { data: signupData }] = useSignupMutation();
+  const [login, { data: loginData }] = useMutation(LoginDocument);
+  const [signup, { data: signupData }] = useMutation(SignupDocument);
   const payload = loginData?.login || signupData?.signup;
   const errorMessage =
     payload && payload?.__typename === 'AuthPayload'
@@ -62,7 +63,7 @@ const Login = (): ReactNode => {
         : e.currentTarget;
 
       const entries: { [key: string]: FormDataEntryValue } = Object.fromEntries(
-        new FormData(form)
+        new FormData(form),
       );
 
       if (entries.password && entries.username) {
@@ -75,7 +76,7 @@ const Login = (): ReactNode => {
           : login({ variables });
       }
     },
-    [login, signup]
+    [login, signup],
   );
 
   return (

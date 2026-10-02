@@ -1,12 +1,9 @@
 import styled, { css } from 'styled-components';
 
-const Label = styled.label.withConfig({
-  shouldForwardProp: (prop, defaultValidatorFn) =>
-    !['required'].includes(prop) && defaultValidatorFn(prop),
-})<{ required?: boolean }>`
+const Label = styled.label<{ $required?: boolean }>`
   font-weight: 700;
-  ${({ required }) =>
-    required &&
+  ${({ $required }) =>
+    $required &&
     css`
       &:after {
         content: '*';

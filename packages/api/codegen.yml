@@ -5,6 +5,9 @@ generates:
     config:
       contextType: ../#Context
       nonOptionalTypename: true
+      scalars:
+        DateTime: string
+        Minutes: number
     plugins:
       - "typescript"
       - "typescript-resolvers"

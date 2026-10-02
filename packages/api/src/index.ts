@@ -2,11 +2,12 @@ import Redis from 'ioredis';
 import ReportAPI from './datasources/ReportAPI';
 import UserAPI from './datasources/UserAPI';
 import express, { Response } from 'express';
+import cors from 'cors';
 import https from 'https';
 import resolvers from './resolvers';
-import { ApolloServer } from 'apollo-server-express';
-import { DataSources } from 'apollo-server-core/dist/graphqlOptions';
-import { ApolloServerPluginLandingPageGraphQLPlayground } from 'apollo-server-core';
+import { ApolloServer } from '@apollo/server';
+import { expressMiddleware } from '@as-integrations/express5';
+import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
 import { createAuthMiddleware } from './authMiddleware';
 import { join } from 'path';
 import { readFileSync } from 'fs';
@@ -30,23 +31,13 @@ const redis = new Redis();
 const credentials = { key: config.sslPrivateKey, cert: config.sslCertificate };
 
 (async function startApolloServer() {
-  const server = new ApolloServer({
+  const server = new ApolloServer<Context>({
     typeDefs: readFileSync(join(__dirname, './schema.graphql'), 'utf8'),
     resolvers,
-    dataSources: (): DataSources<IDataSources> => ({
-      reportAPI: new ReportAPI({ store: redis }),
-      userAPI: new UserAPI({ store: redis }),
-    }),
-    context: async ({ res }) => ({
-      res,
-      userId: res.locals.userId,
-      tokenId: res.locals.tokenId,
-    }),
     plugins: [
-      ApolloServerPluginLandingPageGraphQLPlayground({
-        settings: {
-          'request.credentials': 'include',
-        },
+      ApolloServerPluginLandingPageLocalDefault({
+        embed: true,
+        includeCookies: true,
       }),
     ],
     // mocks: {
@@ -65,29 +56,35 @@ const credentials = { key: config.sslPrivateKey, cert: config.sslCertificate };
     createAuthMiddleware(
       new UserAPI({ store: redis }),
       config.jwtAccessTokenSecret,
-      config.jwtAccessTokenPublic
-    )
+      config.jwtAccessTokenPublic,
+    ),
   );
 
   await server.start();
 
-  server.applyMiddleware({
-    app,
-    cors: {
-      origin: (origin, callback) => {
-        callback(null, origin || '*');
-      },
+  app.use(
+    '/graphql',
+    cors({
+      origin: (origin, callback) => callback(null, origin ?? true),
       credentials: true,
-    },
-  });
-
-  https.createServer(credentials, app);
+    }),
+    express.json(),
+    expressMiddleware(server, {
+      context: async ({ res }) => ({
+        dataSources: {
+          reportAPI: new ReportAPI({ store: redis, userId: res.locals.userId }),
+          userAPI: new UserAPI({ store: redis }),
+        },
+        res,
+        userId: res.locals.userId,
+        tokenId: res.locals.tokenId,
+      }),
+    }),
+  );
 
   const httpsServer = https.createServer(credentials, app);
 
   httpsServer.listen(8443, () => {
-    console.log(
-      `🚀 Server ready at https://localhost:${8443}${server.graphqlPath}`
-    );
+    console.log(`Server ready at https://localhost:${8443}/graphql`);
   });
 })();

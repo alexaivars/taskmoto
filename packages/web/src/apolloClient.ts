@@ -1,9 +1,5 @@
-import {
-  ApolloClient,
-  HttpLink,
-  InMemoryCache,
-  NormalizedCacheObject,
-} from '@apollo/client';
+import { ApolloClient, HttpLink, InMemoryCache } from '@apollo/client';
+import type { NormalizedCacheObject } from '@apollo/client';
 import { GetServerSidePropsContext } from 'next';
 
 const endpoint =
@@ -11,25 +7,23 @@ const endpoint =
 
 export default function createApolloClient(
   initialState: NormalizedCacheObject,
-  ctx?: GetServerSidePropsContext
-): ApolloClient<NormalizedCacheObject> {
+  ctx?: GetServerSidePropsContext,
+): ApolloClient {
   // The `ctx` (NextPageContext) will only be present on the server.
   // use it to extract auth headers (ctx.req) or similar.
-  const enchancedFetch = (input: RequestInfo, init: RequestInit | undefined) =>
-    fetch(input, {
-      ...init,
-      headers: {
-        ...init?.headers,
-        Cookie: ctx?.req.headers.cookie,
-      } as HeadersInit,
-    }).then((response) => response);
+  const enhancedFetch: typeof fetch = (input, init) => {
+    const headers = new Headers(init?.headers);
+    const cookie = ctx?.req.headers.cookie;
+    if (cookie) headers.set('Cookie', cookie);
+    return fetch(input, { ...init, headers });
+  };
 
   return new ApolloClient({
     ssrMode: Boolean(ctx),
     link: new HttpLink({
       uri: endpoint, // Server URL (must be absolute)
       credentials: 'same-origin', // Additional fetch() options like `credentials` or `headers`
-      fetch: ctx ? enchancedFetch : fetch,
+      fetch: ctx ? enhancedFetch : fetch,
       // fetchOptions:
       //   typeof https !== 'undefined'
       //     ? { agent: new https.Agent({ rejectUnauthorized: false }) }

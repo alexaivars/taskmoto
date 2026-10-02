@@ -1,6 +1,8 @@
 .env
 .eslintcache
 build
+**/dist
+packages/doc/storybook-static
 certs
 node_modules
 **/*/generated

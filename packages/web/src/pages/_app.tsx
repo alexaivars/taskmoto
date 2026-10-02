@@ -1,4 +1,4 @@
-import { ApolloProvider } from '@apollo/client';
+import { ApolloProvider } from '@apollo/client/react';
 import { AppProps /*, AppContext */ } from 'next/app';
 import createApolloClient from '../apolloClient';
 import { ThemeProvider } from 'styled-components';

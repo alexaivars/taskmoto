@@ -1,8 +1,8 @@
 import { FormField, FormFieldProps } from '@taskmoto/web/src/ui/FormField';
 import { TextInput } from '@taskmoto/web/src/ui/TextInput';
-import { Story, Meta } from '@storybook/react';
+import type { Meta, StoryFn } from '@storybook/react';
 
-const Template: Story<FormFieldProps> = (args: FormFieldProps) => (
+const Template: StoryFn<FormFieldProps> = (args: FormFieldProps) => (
   <FormField {...args} />
 );
 

@@ -27,35 +27,38 @@ const LayoutItem = styled.div`
 
 type ColumnProps = {
   /** Use multicolumn layout for large devices */
-  multiColumn?: boolean;
+  $multiColumn?: boolean;
   children: React.ReactNode;
   className?: string;
 };
 
-const Column = styled(function ColumnComponent({ multiColumn, children, className }: ColumnProps) {
+const Column = styled(function ColumnComponent({
+  $multiColumn,
+  children,
+  className,
+}: ColumnProps) {
   const content = React.useMemo(
     () =>
-      multiColumn ? (
+      $multiColumn ? (
         <Layout>
-          {React.Children.map(children, child => child && <LayoutItem>{child}</LayoutItem>)}
+          {React.Children.map(
+            children,
+            (child) => child && <LayoutItem>{child}</LayoutItem>,
+          )}
         </Layout>
       ) : (
         children
       ),
-    [children, multiColumn],
+    [children, $multiColumn],
   );
 
   return <div className={className}>{content}</div>;
-}).withConfig<ColumnProps>({
-  shouldForwardProp: (prop, defaultValidatorFn) => {
-    return ['multiColumn'].includes(prop) || defaultValidatorFn(prop);
-  },
 })`
   & + & {
     margin-top: 1.5rem;
   }
-  ${({ multiColumn }) =>
-    !multiColumn &&
+  ${({ $multiColumn }) =>
+    !$multiColumn &&
     css`
       & > * + * {
         margin-top: 1.5rem;
@@ -64,4 +67,3 @@ const Column = styled(function ColumnComponent({ multiColumn, children, classNam
 `;
 
 export default Column;
-

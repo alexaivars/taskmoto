@@ -14,7 +14,7 @@ const VALID_REFRESH_TOKEN = jwt.sign(
     iat: TIMESTAMP,
   },
   REFRESH_TOKEN_SECRET,
-  { expiresIn: 300 }
+  { expiresIn: 300 },
 );
 const VALID_ACCESS_TOKEN = jwt.sign(
   {
@@ -22,7 +22,7 @@ const VALID_ACCESS_TOKEN = jwt.sign(
     iat: TIMESTAMP,
   },
   ACCESS_TOKEN_SECRET,
-  { expiresIn: 3600 }
+  { expiresIn: 3600 },
 );
 
 let middleware: AuthMiddleware, mockApi: UserAPI, req: Request, res: Response;
@@ -41,7 +41,7 @@ beforeEach(() => {
       (key: string) =>
         ({
           Cookie: `access-token=${VALID_ACCESS_TOKEN}; refresh-token=${VALID_REFRESH_TOKEN}`,
-        }[key])
+        })[key],
     ),
   } as unknown as Request;
   res = {
@@ -52,14 +52,14 @@ beforeEach(() => {
   middleware = createAuthMiddleware(
     mockApi,
     ACCESS_TOKEN_SECRET,
-    ACCESS_TOKEN_PUBLIC
+    ACCESS_TOKEN_PUBLIC,
   );
 });
 
 it('should not attach user id when there are no cookies', async () => {
   const next = jest.fn();
   await middleware({ header: jest.fn() } as unknown as Request, res, next);
-  expect(next).toBeCalledTimes(1);
+  expect(next).toHaveBeenCalledTimes(1);
   expect(res.locals.userId).toBeUndefined();
 });
 
@@ -69,7 +69,7 @@ it('should attach user id when there is a valid access token', async () => {
     'access-token': VALID_ACCESS_TOKEN,
   };
   await middleware(req, res, next);
-  expect(next).toBeCalledTimes(1);
+  expect(next).toHaveBeenCalledTimes(1);
   expect(res.locals.userId).toEqual('<user id>');
 });
 
@@ -80,19 +80,19 @@ it('should attach user id and update cookies when there is only a valid refresh 
       (key: string) =>
         ({
           Cookie: `refresh-token=${VALID_REFRESH_TOKEN}`,
-        }[key])
+        })[key],
     ),
   } as unknown as Request;
   timekeeper.travel(TIMESTAMP + 3601);
   await middleware(req, res, next);
-  expect(next).toBeCalledTimes(1);
+  expect(next).toHaveBeenCalledTimes(1);
   expect(res.locals.userId).toEqual('<user id>');
   expect((res.cookie as jest.Mock).mock.calls).toMatchInlineSnapshot(`
-    Array [
-      Array [
+    [
+      [
         "refresh-token",
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI8dXNlciBpZD4iLCJpYXQiOjE2MTY5NTk2NzczMjMsImV4cCI6MTYxNjk1OTY3NzYyM30.qraC0OXsmsh0if3JiuKBhqSTkg8Xi5TgEHos-Pa7I3w",
-        Object {
+        {
           "httpOnly": true,
           "maxAge": 604800000,
           "path": "/graphql",
@@ -100,10 +100,10 @@ it('should attach user id and update cookies when there is only a valid refresh 
           "secure": true,
         },
       ],
-      Array [
+      [
         "access-token",
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI8dXNlciBpZD4iLCJpYXQiOjE2MTY5NTk2NzczMjMsImV4cCI6MTYxNjk1OTY4MDkyM30.fNky5km0Ihu-Qmo4lQTaVALlSlZ0POFXDIsBjVPtVu0",
-        Object {
+        {
           "httpOnly": false,
           "maxAge": 300000,
           "sameSite": "strict",

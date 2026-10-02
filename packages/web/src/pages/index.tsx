@@ -1,21 +1,18 @@
 import jwt from 'jsonwebtoken';
-import getConfig from 'next/config';
 import { gql } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import createApolloClient from '../apolloClient';
 import { GetServerSidePropsContext, GetServerSidePropsResult } from 'next';
 import {
   MeDocument,
-  useMeQuery,
-  useAllTimeEntriesQuery,
-  useSaveTimeEntryMutation,
-  useDeleteTimeEntryMutation,
+  AllTimeEntriesDocument,
+  SaveTimeEntryDocument,
+  DeleteTimeEntryDocument,
   User,
 } from 'generated/graphql';
 import Layout from 'components/Layout';
 import { List, Form, FormField, Button, ButtonField, TextInput } from 'ui';
 import { ReactNode, SyntheticEvent, useState, useEffect } from 'react';
-
-const { serverRuntimeConfig: config } = getConfig();
 
 gql`
   query me {
@@ -78,19 +75,21 @@ type Props = {
 };
 
 export async function getServerSideProps(
-  ctx: GetServerSidePropsContext
+  ctx: GetServerSidePropsContext,
 ): Promise<GetServerSidePropsResult<Props>> {
   const client = createApolloClient({}, ctx);
   const accessToken = ctx.req.cookies['access-token'];
-  try {
-    console.log('>', jwt.verify(accessToken, config.jwtAccessTokenPublic));
-  } catch {}
-  console.log('=>>');
+  const accessTokenSecret = process.env.JWT_ACCESS_TOKEN_PUBLIC;
+  if (accessToken && accessTokenSecret) {
+    try {
+      jwt.verify(accessToken, accessTokenSecret);
+    } catch {}
+  }
   const { data } = await client.query({
     query: MeDocument,
   });
 
-  if (data.me.__typename !== 'User') {
+  if (data?.me.__typename !== 'User') {
     return {
       redirect: {
         destination: '/login',
@@ -105,12 +104,14 @@ export async function getServerSideProps(
 }
 
 export default function Home(): ReactNode {
-  const { data } = useMeQuery();
-  const [save] = useSaveTimeEntryMutation();
-  const [remove] = useDeleteTimeEntryMutation();
+  const { data } = useQuery(MeDocument);
+  const [save] = useMutation(SaveTimeEntryDocument);
+  const [remove] = useMutation(DeleteTimeEntryDocument);
   const [modifier, setModifier] = useState<null | string>(null);
   const errorMessage = '';
-  const { data: allTimeEntriesData, refetch } = useAllTimeEntriesQuery();
+  const { data: allTimeEntriesData, refetch } = useQuery(
+    AllTimeEntriesDocument,
+  );
 
   const entries = allTimeEntriesData?.allTimeEntries?.logEntries || [];
 
@@ -138,7 +139,7 @@ export default function Home(): ReactNode {
   }, []);
 
   const handleSubmit = (
-    e: SyntheticEvent<HTMLButtonElement | HTMLFormElement>
+    e: SyntheticEvent<HTMLButtonElement | HTMLFormElement>,
   ) => {
     e.preventDefault();
     const form: HTMLFormElement = e.currentTarget.form
@@ -146,7 +147,7 @@ export default function Home(): ReactNode {
       : e.currentTarget;
 
     const entries: { [key: string]: FormDataEntryValue } = Object.fromEntries(
-      new FormData(form)
+      new FormData(form),
     );
 
     if (entries.minutes && entries.name) {

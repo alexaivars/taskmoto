@@ -1,7 +1,7 @@
 import { ReactElement } from 'react';
-import styled, { DefaultTheme, StyledComponent } from 'styled-components';
+import styled from 'styled-components';
 
-import { ReactComponent as Trash } from './svg/icons8-trash-50.svg';
+import Trash from './svg/icons8-trash-50.svg';
 
 type SVGComponent = React.FunctionComponent<
   React.SVGProps<SVGSVGElement> & { title?: string }
@@ -20,7 +20,7 @@ const styledSVG = (SVG: SVGComponent, defaultTitle: string) => styled(
         <SVG title={title} />
       </div>
     );
-  }
+  },
 )`
   width: 2rem;
   height: 2rem;
@@ -32,20 +32,8 @@ const styledSVG = (SVG: SVGComponent, defaultTitle: string) => styled(
   }
 `;
 
-export type IconType = StyledComponent<
-  ({
-    title,
-    className,
-  }: {
-    title?: string | undefined;
-    className?: string | undefined;
-  }) => ReactElement,
-  DefaultTheme,
-  Record<string, unknown>,
-  never
->;
-
-export const Remove: IconType = styledSVG(Trash, 'Delete');
+export const Remove = styledSVG(Trash, 'Delete');
+export type IconType = typeof Remove;
 
 export default {
   Remove,

@@ -3,12 +3,12 @@ import styled, { DefaultTheme } from 'styled-components';
 import Label from './Label';
 
 const objectFromEntries = (
-  entries: [string, string | boolean | undefined][]
+  entries: [string, string | boolean | undefined][],
 ): { [key: string]: string | boolean } =>
   entries.reduce(
     (acc, [key, value]) =>
       value !== undefined ? { ...acc, [key]: value } : acc,
-    {}
+    {},
   );
 
 export type FormFieldProps = {
@@ -33,7 +33,7 @@ const FormFieldComponent: React.FunctionComponent<FormFieldProps> = ({
 }) => {
   return (
     <div className={className}>
-      <Label htmlFor={id} required={required}>
+      <Label htmlFor={id} $required={required}>
         {label}
       </Label>
       {description && <p>{description}</p>}
@@ -48,11 +48,11 @@ const FormFieldComponent: React.FunctionComponent<FormFieldProps> = ({
               error
                 ? `${id}-error`
                 : description
-                ? `${id}-description`
-                : undefined,
+                  ? `${id}-description`
+                  : undefined,
             ],
             ['variant', error ? 'failure' : undefined],
-          ])
+          ]),
         )}
       {error && (
         <p className="error" id={`${id}-error`}>

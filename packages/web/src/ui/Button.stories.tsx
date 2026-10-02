@@ -1,7 +1,7 @@
 import { Button, ButtonProps } from '@taskmoto/web/src/ui/Button';
-import { Story, Meta } from '@storybook/react';
+import type { Meta, StoryFn } from '@storybook/react';
 
-const Template: Story<ButtonProps> = (args) => (
+const Template: StoryFn<ButtonProps> = (args) => (
   <Button {...args}>Button</Button>
 );
 

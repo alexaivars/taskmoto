@@ -5,36 +5,25 @@ if (!process.env.JWT_ACCESS_TOKEN_PUBLIC) {
 }
 
 module.exports = {
-  webpack5: true,
-  serverRuntimeConfig: {
-    jwtAccessTokenPublic: process.env.JWT_ACCESS_TOKEN_PUBLIC,
+  compiler: {
+    styledComponents: true,
   },
   webpack(config) {
+    const assetRule = config.module.rules.find((rule) =>
+      rule.test?.test?.('.svg'),
+    );
+    if (assetRule) {
+      assetRule.exclude = /.svg$/i;
+    }
     config.module.rules.push({
       test: /\.svg$/,
+      issuer: /\.[jt]sx?$/,
       use: [
         {
           loader: '@svgr/webpack',
-          options: {
-            prettier: false,
-            svgo: false,
-            svgoConfig: {
-              plugins: [{ removeViewBox: false }],
-            },
-            titleProp: true,
-            ref: true,
-          },
-        },
-        {
-          loader: 'file-loader',
-          options: {
-            name: 'static/media/[name].[hash].[ext]',
-          },
+          options: { titleProp: true, ref: true },
         },
       ],
-      issuer: {
-        and: [/\.(ts|tsx|js|jsx|md|mdx)$/],
-      },
     });
 
     return config;

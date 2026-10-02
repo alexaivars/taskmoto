@@ -1,5 +1,5 @@
 import { background } from './styles';
-import styled, { DefaultTheme, StyledComponent } from 'styled-components';
+import styled from 'styled-components';
 import { ReactElement } from 'react';
 
 const Navigation = styled.main`
@@ -32,15 +32,6 @@ const Header = styled(function HeaderComponent({
   }
 `;
 
-const Page: StyledComponent<
-  'main',
-  DefaultTheme,
-  Record<string, unknown>,
-  never
-> & {
-  Body: typeof Body;
-  Navigation: typeof Navigation;
-  Header: typeof Header;
-} = Object.assign(styled.div``, { Body, Navigation, Header });
+const Page = Object.assign(styled.div``, { Body, Navigation, Header });
 
 export default Page;

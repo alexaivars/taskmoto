@@ -1,7 +1,5 @@
-import { DataSource, DataSourceConfig } from 'apollo-datasource';
-import { Pipeline, Redis } from 'ioredis';
-import { v1 as uuid } from 'uuid';
-import { IDataSources } from '..';
+import { Redis } from 'ioredis';
+import { randomUUID } from 'crypto';
 import { TimeEntry } from '../generated/types';
 
 const entryFromHash = (hash: { [key: string]: string }): TimeEntry => {
@@ -13,22 +11,13 @@ const entryFromHash = (hash: { [key: string]: string }): TimeEntry => {
   };
 };
 
-class ReportAPI extends DataSource {
+class ReportAPI {
   store: Redis;
-  context?: IDataSources;
-  namespace?: string;
+  namespace: string;
 
-  constructor({ store }: { store: Redis }) {
-    super();
+  constructor({ store, userId }: { store: Redis; userId?: string }) {
     this.store = store;
-    this.namespace = '';
-    this.context = undefined;
-  }
-
-  initialize(config: DataSourceConfig<IDataSources>): void {
-    this.context = config.context;
-    const userId: string = this.context?.res?.locals.userId;
-    this.namespace = userId && `USER:${userId}`;
+    this.namespace = userId ? `USER:${userId}` : '';
   }
 
   async newEntryId(): Promise<string> {
@@ -36,7 +25,7 @@ class ReportAPI extends DataSource {
     let exists = 0;
     let id: string;
     do {
-      id = uuid();
+      id = randomUUID();
       exists = await this.store.exists(`${keyScope}:${id}`);
     } while (exists);
     return id;
@@ -52,16 +41,16 @@ class ReportAPI extends DataSource {
       name,
     };
 
-    const pairs: string[][] = Object.entries(entry).filter(
-      (pair: string[]): boolean => pair[0] !== '__typename'
-    );
+    const pairs: string[] = [
+      'id',
+      entry.id,
+      'minutes',
+      String(entry.minutes),
+      'name',
+      entry.name,
+    ];
 
-    await this.store.hset(
-      `${scope}:${id}`,
-      ...pairs.reduce((a: string[], b: string[]): string[] => {
-        return a.concat(b);
-      })
-    );
+    await this.store.hset(`${scope}:${id}`, ...pairs);
     await this.store.zadd(`${scope}:ALL`, 'NX', Date.now(), id);
     return entry;
   }
@@ -80,24 +69,23 @@ class ReportAPI extends DataSource {
     const [nextCursor, elements]: [string, string[]] = await this.store.zscan(
       `${scope}:ALL`,
       cursor,
-      'count',
-      count
+      'COUNT',
+      count,
     );
 
     const keys: string[] = elements.filter((_value, index) => !(index % 2));
-    const entries: [Error | null, { [key: string]: string }][] = await keys
-      .reduce(
-        (pipeline: Pipeline, key: string): Pipeline =>
-          pipeline.hgetall(`${scope}:${key}`),
-        this.store.pipeline()
-      )
-      .exec();
+    const pipeline = this.store.pipeline();
+    keys.forEach((key) => pipeline.hgetall(`${scope}:${key}`));
+    const entries = ((await pipeline.exec()) ?? []) as [
+      Error | null,
+      { [key: string]: string },
+    ][];
 
     const result: [string, TimeEntry[]] = [
       nextCursor,
       entries.map(
         ([_err, hash]: [Error | null, { [key: string]: string }]): TimeEntry =>
-          entryFromHash(hash)
+          entryFromHash(hash),
       ),
     ];
     return result;
