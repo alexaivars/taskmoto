@@ -1,0 +1,14 @@
+{
+  "name": "@taskmoto/graphql",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./operations": "./src/operations.ts",
+    "./client": "./src/client.ts"
+  },
+  "dependencies": {
+    "gql.tada": "1.11.4",
+    "graphql": "16.14.2"
+  }
+}

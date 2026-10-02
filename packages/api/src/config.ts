@@ -1,22 +1,39 @@
 import 'dotenv/config';
+import { readFileSync } from 'node:fs';
 
-if (!process.env.JWT_ACCESS_TOKEN_SECRET) {
-  throw new Error('Missing JWT_ACCESS_TOKEN_SECRET');
+function optionalKey(name: string): string | undefined {
+  const value = process.env[name];
+  const file = process.env[`${name}_FILE`];
+  if (value) return value;
+  if (file) return readFileSync(file, 'utf8');
+  return undefined;
 }
-
-if (!process.env.JWT_ACCESS_TOKEN_PUBLIC) {
-  throw new Error('Missing JWT_ACCESS_TOKEN_PUBLIC');
+function key(name: string): string {
+  const value = optionalKey(name);
+  if (!value) throw new Error(`Provide ${name} or ${name}_FILE`);
+  return value;
 }
-
-if (!process.env.SSL_PRIVATE_KEY) {
-  throw new Error('Missing SSL_PRIVATE_KEY');
+export function loadConfig() {
+  const tlsKey = optionalKey('SSL_PRIVATE_KEY');
+  const tlsCertificate = optionalKey('SSL_CERTIFICATE');
+  if (Boolean(tlsKey) !== Boolean(tlsCertificate))
+    throw new Error('Provide both TLS key and certificate');
+  const tls =
+    tlsKey && tlsCertificate
+      ? { key: tlsKey, cert: tlsCertificate }
+      : undefined;
+  if (process.env.NODE_ENV === 'production' && !process.env.WEB_ORIGIN)
+    throw new Error('WEB_ORIGIN is required in production');
+  return {
+    signingKey: key('JWT_ACCESS_TOKEN_SECRET'),
+    publicKey: key('JWT_ACCESS_TOKEN_PUBLIC'),
+    tls,
+    secureCookies: process.env.NODE_ENV === 'production' || Boolean(tls),
+    webOrigin:
+      process.env.WEB_ORIGIN ?? `${tls ? 'https' : 'http'}://localhost:3000`,
+    redisUrl: process.env.REDIS_URL ?? 'redis://127.0.0.1:6379',
+    port: Number(process.env.API_PORT ?? 8443),
+    host: process.env.HOST ?? '127.0.0.1',
+  };
 }
-
-if (!process.env.SSL_CERTIFICATE) {
-  throw new Error('Missing SSL_PRIVATE_KEY');
-}
-
-export const jwtAccessTokenSecret: string = process.env.JWT_ACCESS_TOKEN_SECRET;
-export const jwtAccessTokenPublic: string = process.env.JWT_ACCESS_TOKEN_PUBLIC;
-export const sslPrivateKey: string = process.env.SSL_PRIVATE_KEY;
-export const sslCertificate: string = process.env.SSL_CERTIFICATE;
+export type Config = ReturnType<typeof loadConfig>;

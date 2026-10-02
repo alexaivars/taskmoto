@@ -1,17 +1,12 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "target": "es6",
-    "module": "commonjs",
+    "target": "ES2022",
+    "module": "ESNext",
     "moduleResolution": "bundler",
-    "esModuleInterop": true,
-    "rootDir": "src",
-    "outDir": "dist",
     "jsx": "react-jsx",
-    "declaration": true,
-    "noImplicitAny": true,
-    "paths": {
-      "@taskmoto/ui": ["../ui/src/*"]
-    }
-  }
+    "noEmit": true,
+    "types": ["vite-plugin-svgr/client"]
+  },
+  "include": ["ui", ".storybook"]
 }

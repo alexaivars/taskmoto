@@ -1,95 +1,74 @@
-import { Redis } from 'ioredis';
-import { randomUUID } from 'crypto';
-import { TimeEntry } from '../generated/types';
+import type { Redis } from 'ioredis';
+import { randomUUID } from 'node:crypto';
+import type { TimeEntry } from '../models.ts';
 
-const entryFromHash = (hash: { [key: string]: string }): TimeEntry => {
+function entryFromHash(hash: Record<string, string>): TimeEntry {
+  if (!hash.id) throw new Error('Entry not found');
   return {
     __typename: 'TimeEntry',
     id: hash.id,
-    minutes: parseInt(hash.minutes, 10),
+    minutes: Number(hash.minutes),
     name: hash.name,
   };
-};
-
-class ReportAPI {
-  store: Redis;
-  namespace: string;
-
-  constructor({ store, userId }: { store: Redis; userId?: string }) {
-    this.store = store;
-    this.namespace = userId ? `USER:${userId}` : '';
+}
+export default class ReportAPI {
+  private scope: string;
+  constructor(
+    private store: Redis,
+    userId: string,
+  ) {
+    if (!userId) throw new Error('Login required');
+    this.scope = `USER:${userId}:ENTRY`;
   }
-
-  async newEntryId(): Promise<string> {
-    const keyScope = `${this.namespace}:ENTRY`;
-    let exists = 0;
-    let id: string;
-    do {
-      id = randomUUID();
-      exists = await this.store.exists(`${keyScope}:${id}`);
-    } while (exists);
-    return id;
-  }
-
   async createLog(minutes: number, name: string): Promise<TimeEntry> {
-    const id: string = await this.newEntryId();
-    const scope = `${this.namespace}:ENTRY`;
-    const entry: TimeEntry = {
-      __typename: 'TimeEntry',
+    if (!Number.isSafeInteger(minutes) || minutes <= 0 || minutes > 2147483647)
+      throw new Error('Minutes must be a positive integer');
+    if (name.length > 500)
+      throw new Error('Keep the description within 500 characters');
+    const id = randomUUID();
+    const entry: TimeEntry = { __typename: 'TimeEntry', id, minutes, name };
+    const result = await this.store
+      .multi()
+      .hset(`${this.scope}:${id}`, { id, minutes: String(minutes), name })
+      .zadd(`${this.scope}:ALL`, Date.now(), id)
+      .exec();
+    if (!result || result.some(([error]) => error))
+      throw new Error('Could not save entry');
+    return entry;
+  }
+  async deleteEntry(id: string): Promise<TimeEntry> {
+    const hash = (await this.store.eval(
+      `
+      local data = redis.call('HGETALL', KEYS[1])
+      if #data == 0 then return data end
+      redis.call('ZREM', KEYS[2], ARGV[1])
+      redis.call('DEL', KEYS[1])
+      return data`,
+      2,
+      `${this.scope}:${id}`,
+      `${this.scope}:ALL`,
       id,
-      minutes,
-      name,
-    };
-
-    const pairs: string[] = [
-      'id',
-      entry.id,
-      'minutes',
-      String(entry.minutes),
-      'name',
-      entry.name,
-    ];
-
-    await this.store.hset(`${scope}:${id}`, ...pairs);
-    await this.store.zadd(`${scope}:ALL`, 'NX', Date.now(), id);
-    return entry;
-  }
-
-  async getEntryById(id: string): Promise<TimeEntry> {
-    const scope = `${this.namespace}:ENTRY`;
-    const hash = await this.store.hgetall(`${scope}:${id}`);
-    const entry = entryFromHash(hash);
-    await this.store.zrem(`${scope}:ALL`, id);
-    await this.store.del(`${scope}:${id}`);
-    return entry;
-  }
-
-  async getEntries(cursor = '0', count = 10): Promise<[string, TimeEntry[]]> {
-    const scope = `${this.namespace}:ENTRY`;
-    const [nextCursor, elements]: [string, string[]] = await this.store.zscan(
-      `${scope}:ALL`,
-      cursor,
-      'COUNT',
-      count,
-    );
-
-    const keys: string[] = elements.filter((_value, index) => !(index % 2));
-    const pipeline = this.store.pipeline();
-    keys.forEach((key) => pipeline.hgetall(`${scope}:${key}`));
-    const entries = ((await pipeline.exec()) ?? []) as [
-      Error | null,
-      { [key: string]: string },
-    ][];
-
-    const result: [string, TimeEntry[]] = [
-      nextCursor,
-      entries.map(
-        ([_err, hash]: [Error | null, { [key: string]: string }]): TimeEntry =>
-          entryFromHash(hash),
+    )) as string[];
+    return entryFromHash(
+      Object.fromEntries(
+        Array.from({ length: hash.length / 2 }, (_, i) => [
+          hash[i * 2],
+          hash[i * 2 + 1],
+        ]),
       ),
-    ];
-    return result;
+    );
+  }
+  async getEntries(): Promise<TimeEntry[]> {
+    const ids = await this.store.zrevrange(`${this.scope}:ALL`, 0, -1);
+    if (!ids.length) return [];
+    const pipeline = this.store.pipeline();
+    ids.forEach((id) => pipeline.hgetall(`${this.scope}:${id}`));
+    const rows = await pipeline.exec();
+    if (!rows) throw new Error('Could not load entries');
+    return rows.flatMap(([error, data]) => {
+      if (error) throw error;
+      const hash = data as Record<string, string>;
+      return hash.id ? [entryFromHash(hash)] : [];
+    });
   }
 }
-
-export default ReportAPI;

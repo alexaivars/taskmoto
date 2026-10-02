@@ -1,34 +1,16 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Taskmoto web
 
-## Getting Started
+Remix 3 renders the work-log UI and adapts native forms to the separate GraphQL API. It owns no password hashing, account authorization or Redis access.
 
-First, run the development server:
+Use the workspace root's `yarn dev` and `yarn build` to keep the schema contract synchronized. See the root README for environment configuration and verification.
 
-```bash
-npm run dev
-# or
-yarn dev
-```
+- `app/routes.ts`: typed URL/method contract.
+- `app/router.ts`: request boundary, form parsing and component rendering.
+- `app/actions/controller.tsx`: GraphQL-backed web actions.
+- `app/actions/pages.tsx`: account and work-log views.
+- `app/actions/public/`: browser runtime and hydrated submit feedback.
+- `app/assets.ts`: explicit public module allowlist and hoisted workspace package mount.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Native forms work without JavaScript. With the Remix runtime, links and forms use frame navigation; submit buttons show pending feedback. The UI uses shared gql.tada operations and inferred types through `@taskmoto/graphql`.
 
-You can start editing the page by modifying `pages/index.js`. The page auto-updates as you edit the file.
-
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.js`.
-
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+The bundled agent skill and the installed `remix/INDEX.md` describe the APIs for the pinned framework version. `remix doctor` in this release assumes a package-local `node_modules/remix`; Yarn's workspace hoisting causes a false missing-install warning. Do not rewrite the workspace layout just to silence that diagnostic.

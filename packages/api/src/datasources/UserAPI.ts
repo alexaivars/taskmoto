@@ -1,196 +1,145 @@
 import SecurePassword from 'secure-password';
-import createError from 'http-errors';
 import jwt from 'jsonwebtoken';
-import { Redis } from 'ioredis';
-import { User } from '../generated/types';
-import { randomUUID } from 'crypto';
+import type { Redis } from 'ioredis';
+import type { User } from '../models.ts';
+import { randomUUID } from 'node:crypto';
 
-const userFromHash = (hash: { [key: string]: string }): User => {
-  const { id, username }: { id?: string; username?: string } = hash;
-  return {
-    __typename: 'User',
-    id,
-    username,
-  };
-};
-
-class UserAPI {
-  store: Redis;
-  pwd: SecurePassword;
-
-  constructor({ store }: { store: Redis }) {
-    this.store = store;
-    this.pwd = new SecurePassword();
-  }
+const WEEK = 7 * 24 * 60 * 60;
+export function validateUsername(username: string) {
+  if (!/^[\p{L}\p{N}_.-]{3,64}$/u.test(username))
+    throw new Error(
+      'Use 3–64 letters, numbers, dots, underscores or hyphens for your username',
+    );
+}
+export default class UserAPI {
+  private pwd = new SecurePassword();
+  constructor(public store: Redis) {}
 
   async getUserHash(id: string): Promise<string> {
     const hash = await this.store.get(`USER:${id}:HASH`);
-    if (!hash) {
-      throw new createError.Unauthorized('User missing password');
-    }
+    if (!hash) throw new Error('Invalid credentials');
     return hash;
   }
-
+  async getRefreshSecret(id: string): Promise<string> {
+    return (
+      (await this.store.get(`USER:${id}:REFRESH_SECRET`)) ??
+      this.getUserHash(id)
+    );
+  }
   async getUserById(id: string): Promise<User> {
-    const user: User = userFromHash(
-      await this.store.hgetall(`USER:${id}:DATA`),
-    );
-    if (!user) {
-      throw new createError.Unauthorized('User not found');
-    }
-    return user;
+    const data = await this.store.hgetall(`USER:${id}:DATA`);
+    if (!data.id || !data.username) throw new Error('Invalid credentials');
+    return { __typename: 'User', id: data.id, username: data.username };
   }
-
   async getUserByName(username: string): Promise<User> {
-    const key: string = Buffer.from(username, 'utf8').toString('base64');
-    const id: string | null = await this.store.get(`NAME:ID:${key}`);
-    if (!id) {
-      throw new createError.Unauthorized('User not found');
-    }
-    const user: User = userFromHash(
-      await this.store.hgetall(`USER:${id}:DATA`),
+    const id = await this.store.get(
+      `NAME:ID:${Buffer.from(username).toString('base64')}`,
     );
-    return user;
-  }
-
-  async createUserId(username: string): Promise<string> {
-    const key: string = Buffer.from(username, 'utf8').toString('base64');
-    let exists: number;
-    let id: string;
-    if (await this.store.exists(`NAME:ID:${key}`)) {
-      throw new Error('Username must be unique');
-    }
-    do {
-      id = randomUUID();
-      exists = await this.store.exists(`USER:${id}:NAME`);
-    } while (exists);
-    await this.store.set(`NAME:ID:${key}`, id);
-    await this.store.set(`USER:${id}:NAME`, username);
-    return id;
-  }
-
-  async createUser(username: string, password: string): Promise<User> {
-    const hash: Buffer = await this.pwd.hash(Buffer.from(password));
-    const id: string = await this.createUserId(username);
-    await this.store.set(`USER:${id}:HASH`, hash.toString('base64'));
-    await this.store.hset(`USER:${id}:DATA`, 'id', id, 'username', username);
+    if (!id) throw new Error('Invalid credentials');
     return this.getUserById(id);
   }
-
-  async authenticateUser(username: string, password: string): Promise<User> {
-    const user: User = await this.getUserByName(username);
-    const userPassword: Buffer = Buffer.from(password);
-    const hash: string = await this.getUserHash(user.id);
-    const result: symbol = await this.pwd.verify(
-      userPassword,
-      Buffer.from(hash, 'base64'),
-    );
-
-    switch (result) {
-      case SecurePassword.VALID_NEEDS_REHASH:
-        try {
-          const improvedHash = await this.pwd.hash(userPassword);
-          await this.store.set(
-            `USER:${user.id}:HASH`,
-            improvedHash.toString('base64'),
-          );
-          // Save improvedHash somewhere
-        } catch (err) {
-          console.log(err);
-        }
-      case SecurePassword.VALID:
-        return user;
-      default:
-        throw new createError.Unauthorized('Invalid password');
-    }
-  }
-
-  async validateToken(token: string): Promise<User> {
-    const { sub: id }: { sub?: string } =
-      jwt.decode(token, { json: true }) || {};
-    if (id) {
-      const user: User = await this.getUserById(id);
-      const hash: string = await this.getUserHash(id);
-      const exists: number = await this.store.exists(
-        `USER:${id}:TOKEN:${token}`,
+  async createUser(username: string, password: string): Promise<User> {
+    validateUsername(username);
+    if (password.length < 6 || Buffer.byteLength(password) > 1024) {
+      throw new Error(
+        'Use a password of at least 6 characters (at most 1024 bytes)',
       );
-      const clockTimestamp: number = await this.getTimestamp();
-
-      if (Boolean(exists) === false) {
-        throw new createError.Unauthorized('Invalid token');
-      }
-
-      try {
-        jwt.verify(token, hash, { clockTimestamp });
-      } catch (err) {
-        // console.log(err.name);
-        throw new createError.Unauthorized('Invalid token');
-      }
-      return user;
     }
-    throw new createError.Unauthorized();
+    const hash = (await this.pwd.hash(Buffer.from(password))).toString(
+      'base64',
+    );
+    const id = randomUUID();
+    // Reserve the name and write the complete account atomically, retaining existing Redis keys.
+    const created = await this.store.eval(
+      `
+      if redis.call('EXISTS', KEYS[1]) == 1 then return 0 end
+      redis.call('SET', KEYS[1], ARGV[1])
+      redis.call('SET', KEYS[2], ARGV[2])
+      redis.call('SET', KEYS[3], ARGV[3])
+      redis.call('HSET', KEYS[4], 'id', ARGV[1], 'username', ARGV[2])
+      return 1`,
+      4,
+      `NAME:ID:${Buffer.from(username).toString('base64')}`,
+      `USER:${id}:NAME`,
+      `USER:${id}:HASH`,
+      `USER:${id}:DATA`,
+      id,
+      username,
+      hash,
+    );
+    if (created !== 1) throw new Error('Username is already taken');
+    return this.getUserById(id);
   }
-
+  async authenticateUser(username: string, password: string): Promise<User> {
+    if (Buffer.byteLength(password) > 1024)
+      throw new Error('Invalid credentials');
+    let user: User;
+    try {
+      user = await this.getUserByName(username);
+    } catch {
+      // Keep the password hashing cost for an unknown account as well.
+      await this.pwd.hash(Buffer.from(password));
+      throw new Error('Invalid credentials');
+    }
+    const result = await this.pwd.verify(
+      Buffer.from(password),
+      Buffer.from(await this.getUserHash(user.id), 'base64'),
+    );
+    if (
+      result !== SecurePassword.VALID &&
+      result !== SecurePassword.VALID_NEEDS_REHASH
+    ) {
+      throw new Error('Invalid credentials');
+    }
+    if (result === SecurePassword.VALID_NEEDS_REHASH) {
+      const hash = await this.pwd.hash(Buffer.from(password));
+      await this.store.set(`USER:${user.id}:HASH`, hash.toString('base64'));
+    }
+    return user;
+  }
   async getTimestamp(): Promise<number> {
-    return Number(await this.store.time());
+    const [seconds] = await this.store.time();
+    return Number(seconds);
   }
-
-  async removeRefreshToken(userId: string, tokenId: string): Promise<number> {
-    return this.store.del(`USER:${userId}:REFRESH_TOKEN:${tokenId}`);
-  }
-
-  async createRefreshToken(id: string, iat?: number): Promise<string> {
-    const expiresIn: number = 60 * 60 * 24 * 7;
-    const hash: string = await this.getUserHash(id);
-    const jti: string = randomUUID();
-
-    if (!iat) {
-      iat = await this.getTimestamp();
-    }
-
-    const token: string = jwt.sign(
-      {
-        sub: id,
-        iat,
-        jti,
-      },
-      hash,
-      { expiresIn },
-    );
-
-    this.store.set(`USER:${id}:REFRESH_TOKEN:${jti}`, token, 'EX', expiresIn);
-    return token;
-  }
-
-  async createAccessToken(
+  async createSession(
     id: string,
-    hash?: string,
-    iat?: number,
-  ): Promise<string> {
-    const expiresIn: number = 60 * 5;
-    const sub: string = id;
-
-    if (!hash) {
-      hash = await this.getUserHash(id);
-    }
-
-    if (!iat) {
-      iat = await this.getTimestamp();
-    }
-
-    const token: string = jwt.sign(
-      {
-        sub,
-        iat,
-        scope: ['user'].join(' '),
-      },
-      hash,
-      { expiresIn, algorithm: 'RS256' },
+    signingKey: string,
+    previous?: { id: string; token: string },
+  ) {
+    const iat = await this.getTimestamp();
+    const jti = randomUUID();
+    const refreshToken = jwt.sign(
+      { sub: id, iat, jti },
+      await this.getRefreshSecret(id),
+      { algorithm: 'HS256', expiresIn: WEEK },
     );
-
-    // this.store.set(`USER:${id}:ACCESS_TOKEN:${sub}`, token, "ex", expiresIn);
-    return token;
+    const accessToken = jwt.sign(
+      { sub: id, iat, jti, scope: 'user' },
+      signingKey,
+      { algorithm: 'RS256', expiresIn: 300 },
+    );
+    const key = `USER:${id}:REFRESH_TOKEN:${jti}`;
+    if (previous) {
+      const rotated = await this.store.eval(
+        `
+        if redis.call('GET', KEYS[1]) ~= ARGV[1] then return 0 end
+        redis.call('DEL', KEYS[1])
+        redis.call('SET', KEYS[2], ARGV[2], 'EX', ARGV[3])
+        return 1`,
+        2,
+        `USER:${id}:REFRESH_TOKEN:${previous.id}`,
+        key,
+        previous.token,
+        refreshToken,
+        WEEK,
+      );
+      if (rotated !== 1) throw new Error('Session expired');
+    } else {
+      await this.store.set(key, refreshToken, 'EX', WEEK);
+    }
+    return { accessToken, refreshToken, userId: id, tokenId: jti };
+  }
+  async removeRefreshToken(userId: string, tokenId: string) {
+    await this.store.del(`USER:${userId}:REFRESH_TOKEN:${tokenId}`);
   }
 }
-
-export default UserAPI;

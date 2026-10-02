@@ -3,7 +3,13 @@
   "name": "@taskmoto/workspace",
   "scripts": {
     "dev": "node scripts/start-dev.js",
-    "prepare": "husky"
+    "prepare": "husky",
+    "schema": "node --import tsx scripts/sync-schema.ts",
+    "build": "yarn schema && node --import tsx scripts/check-operations.ts && yarn workspace @taskmoto/api build && yarn workspace @taskmoto/web build",
+    "test": "yarn test:setup && yarn schema && yarn workspace @taskmoto/api test && yarn workspace @taskmoto/web test",
+    "test:setup": "node --test scripts/setup-dev.test.js",
+    "postinstall": "yarn schema",
+    "setup": "bash scripts/setup.sh"
   },
   "workspaces": [
     "packages/*"
@@ -17,7 +23,10 @@
     "globals": "17.13.0",
     "husky": "9.1.7",
     "typescript": "6.0.3",
-    "lint-staged": ">=17.6.0"
+    "lint-staged": ">=17.6.0",
+    "tsx": "^4.21.0",
+    "prettier": "3.9.9",
+    "dotenv": "18.0.5"
   },
   "dependencies": {},
   "lint-staged": {
@@ -25,5 +34,8 @@
       "eslint --cache --fix",
       "prettier --ignore-unknown --write"
     ]
+  },
+  "engines": {
+    "node": ">=24.3.0"
   }
 }

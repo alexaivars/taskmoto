@@ -1,0 +1,152 @@
+:root {
+  font:
+    16px/1.5 system-ui,
+    sans-serif;
+  color: #202b38;
+  background: #f7f8fa;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+}
+main {
+  max-width: 880px;
+  margin: auto;
+  padding: 24px;
+}
+header,
+.account,
+.section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+header {
+  padding-bottom: 24px;
+  border-bottom: 1px solid #dbe1e8;
+}
+.brand {
+  font-weight: 750;
+  font-size: 22px;
+  text-decoration: none;
+}
+a {
+  color: #245b9f;
+}
+h1 {
+  font-size: 28px;
+  margin-bottom: 4px;
+}
+h2 {
+  font-size: 20px;
+}
+p {
+  color: #586676;
+}
+section {
+  margin: 32px 0;
+}
+.auth {
+  max-width: 420px;
+  margin: 48px auto;
+}
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-weight: 550;
+}
+form {
+  display: grid;
+  gap: 16px;
+}
+input,
+button {
+  font: inherit;
+  border: 1px solid #aebac8;
+  border-radius: 6px;
+  padding: 10px 12px;
+}
+input {
+  width: 100%;
+  background: white;
+  color: inherit;
+}
+button {
+  background: #245b9f;
+  color: white;
+  border-color: #245b9f;
+  cursor: pointer;
+  font-weight: 600;
+}
+button:hover {
+  filter: brightness(0.93);
+}
+.secondary {
+  background: transparent;
+  color: #36475b;
+  border-color: #c3cdd8;
+  padding: 6px 12px;
+}
+input:focus-visible,
+button:focus-visible,
+a:focus-visible {
+  outline: 3px solid #7fb2e8;
+  outline-offset: 3px;
+}
+.entry-form {
+  display: grid;
+  grid-template-columns: 1fr 120px auto;
+  align-items: end;
+}
+.entries {
+  list-style: none;
+  padding: 0;
+}
+.entries li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 0;
+  gap: 16px;
+  border-top: 1px solid #dbe1e8;
+}
+.entries li div {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.entries li span,
+.hint {
+  font-size: 14px;
+  color: #586676;
+}
+.error {
+  color: #a32730;
+  padding: 12px;
+  background: #ffeded;
+  border-radius: 6px;
+}
+.empty {
+  padding: 24px 0;
+}
+@media (max-width: 600px) {
+  main {
+    padding: 16px;
+  }
+  .entry-form {
+    grid-template-columns: 1fr;
+  }
+  .account {
+    gap: 8px;
+  }
+  .section-heading {
+    align-items: start;
+    flex-direction: column;
+    gap: 0;
+  }
+}

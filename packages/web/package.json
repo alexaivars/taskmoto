@@ -2,45 +2,26 @@
   "name": "@taskmoto/web",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24.3.0"
+  },
   "scripts": {
-    "build": "next build --webpack",
-    "dev:ui": "chokidar --initial \"./src/ui/{,**/}*.@(ts|tsx)\" -i \"./src/ui/index.ts\" -i \"./src/ui/{,**/}.stories.@(ts|tsx)\" -c \"yarn generate:ui\"",
-    "dev:generate": "yarn generate && scripts/generateIndex.sh",
-    "dev:server": "NODE_EXTRA_CA_CERTS=/Users/alex/projects/taskmoto/scripts/certs/RootCA.pem ts-node --project tsconfig.server.json server",
-    "dev": "yarn:generate && yarn dev:server",
-    "generate:ui": "scripts/generateIndex.sh",
-    "generate": "NODE_TLS_REJECT_UNAUTHORIZED=0 NODE_EXTRA_CA_CERTS=$(grep NODE_EXTRA_CA_CERTS .env | cut -d '=' -f2) graphql-codegen --require dotenv/config --config codegen.yml",
-    "start": "NODE_EXTRA_CA_CERTS=$(grep NODE_EXTRA_CA_CERTS .env | cut -d '=' -f2) NODE_ENV=production node --require dotenv/config dist/index.js"
+    "dev": "NODE_ENV=development node --watch --import remix/node-tsx server.ts",
+    "start": "NODE_ENV=production node --import remix/node-tsx server.ts",
+    "build": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "test": "node --import remix/node-tsx --test app/actions/signup.test.ts",
+    "doctor": "remix doctor"
   },
   "dependencies": {
-    "@apollo/client": "4.3.1",
+    "@simplewebauthn/browser": "14.0.0",
+    "@taskmoto/graphql": "1.0.0",
     "dotenv": "18.0.5",
     "graphql": "16.14.2",
-    "http-proxy": "1.18.1",
-    "jsonwebtoken": "9.0.3",
-    "next": "16.3.8",
-    "polished": "4.3.1",
-    "react": "19.3.0",
-    "react-dom": "19.3.0",
-    "styled-components": "6.5.3",
-    "rxjs": "7.8.2",
-    "styled-normalize": "8.1.1"
+    "remix": "3.0.0-rc.5"
   },
   "devDependencies": {
-    "@graphql-codegen/cli": "7.4.3",
-    "@graphql-codegen/fragment-matcher": "7.1.0",
-    "@graphql-codegen/introspection": "6.1.0",
-    "@graphql-codegen/typescript": "6.1.0",
-    "@graphql-codegen/typed-document-node": "^7.1.0",
-    "@graphql-codegen/typescript-document-nodes": "6.1.1",
-    "@graphql-codegen/typescript-operations": "6.1.9",
-    "@svgr/webpack": "8.1.0",
-    "@types/http-proxy": "1.17.17",
-    "@types/jscodeshift": "17.3.0",
-    "@types/react": "19.3.0",
-    "chokidar-cli": "3.0.0",
-    "jscodeshift": "17.4.0",
-    "ts-graphql-plugin": "4.0.5",
-    "ts-node": "10.9.2"
+    "@types/node": "24.19.1"
   }
 }

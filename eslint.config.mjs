@@ -13,7 +13,10 @@ export default [
       '**/coverage/**',
     ],
   },
-  eslintReact.configs['recommended-typescript'],
+  {
+    ...eslintReact.configs['recommended-typescript'],
+    files: ['packages/doc/**/*.{ts,tsx,js,jsx}'],
+  },
   {
     files: ['**/*.{js,jsx,ts,tsx}'],
     languageOptions: {
@@ -33,7 +36,10 @@ export default [
     },
     rules: {
       ...tsPlugin.configs.recommended.rules,
-      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-unused-vars': [
+        'warn',
+        { argsIgnorePattern: '^_' },
+      ],
       '@typescript-eslint/no-unused-expressions': 'off',
       'linebreak-style': ['error', 'unix'],
       semi: ['error', 'always'],
