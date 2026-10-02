@@ -73,7 +73,7 @@ else
   chmod 640 "$keys/private.pem" "$keys/public.pem"
   mv "$keys" "$root/keys"
 fi
-compose pull redis caddy
+timeout 300 docker compose --env-file "$release/.env" -f "$release/compose.yml" pull redis caddy
 if [ -f "$root/storage-provisioned" ]; then
   docker volume inspect taskmoto_redis_data >/dev/null || { echo 'Redis volume is missing; refusing an empty replacement.' >&2; exit 1; }
 else

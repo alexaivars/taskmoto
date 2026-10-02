@@ -242,12 +242,13 @@ export async function deploy(revision) {
       await copyFile(join(source, 'deploy', file), join(bundle, file));
     const size = (await stat(`${images}.gz`)).size;
     const remote = await readFile(join(source, 'deploy/remote.sh'), 'utf8');
-    const command = `flock -n -E 75 /run/lock/taskmoto-deploy.lock bash -c ${shellQuote(remote)} -- ${shellQuote(sha)} ${shellQuote(config.DEPLOY_DOMAIN)} ${size}`;
+    const command = `flock -n -E 75 /run/lock/taskmoto-deploy.lock bash -c ${shellQuote(remote)} -- ${shellQuote(sha)} ${shellQuote(config.DEPLOY_DOMAIN)} ${size} || { result=$?; if [ "$result" -eq 75 ]; then echo 'Deployment already running; no changes applied.' >&2; fi; exit "$result"; }`;
     console.log(
       'Uploading images and applying the release under the server deployment lock.',
     );
     const transfer = spawn('tar', ['-cf', '-', '-C', bundle, '.'], {
       stdio: ['ignore', 'pipe', 'inherit'],
+      env: { ...process.env, COPYFILE_DISABLE: '1' },
     });
     const transferDone = new Promise((resolveTransfer, reject) => {
       transfer.once('error', reject);

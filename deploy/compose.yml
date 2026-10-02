@@ -98,6 +98,6 @@ networks:
   backend: { internal: true }
   frontend: {}
 volumes:
-  redis_data: { name: taskmoto_redis_data }
-  caddy_data: { name: taskmoto_caddy_data }
-  caddy_config: { name: taskmoto_caddy_config }
+  redis_data: { name: taskmoto_redis_data, external: true }
+  caddy_data: { name: taskmoto_caddy_data, external: true }
+  caddy_config: { name: taskmoto_caddy_config, external: true }
