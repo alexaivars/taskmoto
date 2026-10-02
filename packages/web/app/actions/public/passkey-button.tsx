@@ -32,7 +32,7 @@ export const PasskeyButton = clientEntry(
       const { mode } = handle.props;
       const ceremony = mode === 'login' ? 'authentication' : 'registration';
       return (
-        <div className="passkey-action">
+        <div className="passkey-action" data-rmx-key={`passkey-${mode}`}>
           <button
             type="button"
             className="secondary"

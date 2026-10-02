@@ -86,7 +86,10 @@ export function AuthPage(
               ? 'Or enter a username above and create your account without a password.'
               : 'Or use a saved passkey without entering a password.'}
           </p>
-          <PasskeyButton mode={signup ? 'signup' : 'login'} />
+          <PasskeyButton
+            key={signup ? 'passkey-signup' : 'passkey-login'}
+            mode={signup ? 'signup' : 'login'}
+          />
           <p>
             {signup ? 'Already have an account? ' : 'New here? '}
             <a href={signup ? routes.login.href() : routes.signup.href()}>
@@ -125,7 +128,7 @@ export function WorklogPage(
           </div>
         </header>
         <section>
-          <PasskeyButton mode="enroll" />
+          <PasskeyButton key="passkey-enroll" mode="enroll" />
         </section>
         <section>
           <h1>Your work log</h1>
